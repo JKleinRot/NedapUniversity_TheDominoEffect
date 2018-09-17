@@ -1,5 +1,8 @@
 /.metadata/
 .DS_Store
+/.classpath
 .classpath
+TheDominoEffect/.classpath
 .project
 .settings/
+.recommenders/
