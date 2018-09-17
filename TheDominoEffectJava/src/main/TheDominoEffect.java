@@ -2,6 +2,9 @@ package main;
 
 import java.util.Scanner;
 
+import main.exception.InvalidInputException;
+import main.exception.InvalidInputGridException;
+import main.exception.InvalidInputSizeException;
 import main.solver.Solver;
 import main.solver.SolverImpl;
 
@@ -25,7 +28,18 @@ public class TheDominoEffect {
 
 	public void run() {
 		String input = readInput("Please enter the 7 x 8 domino grid. Enter each number starting at the top left number and work your way down row wise to the bottom right number of the grid:");
-		solver.solve(input);
+		try {
+			solver.solve(input);
+		} catch (InvalidInputException e) {
+			System.out.println("The entered domino grid was not valid since it contained characters other than 0..6.");
+			run();
+		} catch (InvalidInputSizeException e) {
+			System.out.println("The entered domino grid was not valid since the input did not contain 56 characters");
+			run();
+		} catch (InvalidInputGridException e) {
+			System.out.println("The entered domino grid was not valid since the amount of each pip in the grid was not correct");
+			run();
+		}
 	}
 
 	/**
