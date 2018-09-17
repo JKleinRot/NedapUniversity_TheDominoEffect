@@ -3,6 +3,9 @@
 import System.IO
 import Data.Char
 
+-- A domino stone is a tuple with two pips
+type Dom = (Int, Int)
+
 -- The main function
 theDominoEffect :: IO ()
 theDominoEffect = do putStrLn "Please enter the 7 x 8 domino grid. Enter each number starting at the top left number and work your way down row wise to the bottom right number of the grid: "
@@ -34,4 +37,12 @@ isValidGrid :: String -> Bool
 isValidGrid input = length (filter (== '0') input) == 8 && length (filter (== '1') input) == 8 && length (filter (== '2') input) == 8 && length (filter (== '3') input) == 8 &&
                     length (filter (== '4') input) == 8 && length (filter (== '5') input) == 8 && length (filter (== '6') input) == 8
 
-
+-- Available domino stones
+dominos :: [Dom]
+dominos = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6),
+                   (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6),
+                           (2, 2), (2, 3), (2, 4), (2, 5), (2, 6),
+                                   (3, 3), (3, 4), (3, 5), (3, 6),
+                                           (4, 4), (4, 5), (4, 6),
+                                                   (5, 5), (5, 6),
+                                                           (6, 6)]
