@@ -5,8 +5,8 @@ import Data.Char
 import Data.List
 import Data.Maybe
 
--- A domino stone is a tuple with two pips
-type Dom = (Int, Int)
+-- A domino stone is a tuple of a tuple with two pips and the bone of the domino
+type Dom = ((Int, Int), Int)
 -- A position is a tuple with the pip, whether or not the pip is occupied and the bone it is occupied with, if the pip is not occupied, the pip is -1
 type Pos = (Int, Bool, Int)
 -- A row is a list of position
@@ -48,27 +48,27 @@ isValidGrid input = length (filter (== '0') input) == 8 && length (filter (== '1
 
 -- Available domino stones
 dominos :: [Dom]
-dominos = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6),
-                   (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6),
-                           (2, 2), (2, 3), (2, 4), (2, 5), (2, 6),
-                                   (3, 3), (3, 4), (3, 5), (3, 6),
-                                           (4, 4), (4, 5), (4, 6),
-                                                   (5, 5), (5, 6),
-                                                           (6, 6)]
+dominos = [((0, 0), 1), ((0, 1), 2), ((0, 2), 3),  ((0, 3), 4),  ((0, 4), 5),  ((0, 5), 6),  ((0, 6), 7),
+                        ((1, 1), 8), ((2, 2), 9),  ((1, 3), 10), ((1, 4), 11), ((1, 5), 12), ((1, 6), 13),
+                                     ((2, 2), 14), ((2, 3), 15), ((2, 4), 16), ((2, 5), 17), ((2, 6), 18),
+                                                   ((3, 3), 19), ((3, 4), 20), ((3, 5), 21), ((3, 6), 22),
+                                                                 ((4, 4), 23), ((4, 5), 24), ((4, 6), 25),
+                                                                               ((5, 5), 26), ((5, 6), 27),
+                                                                                             ((6, 6), 28)]
 
 -- Creates a board from the input grid
 createBoard :: String -> Board
-createBoard input = map createInitialPositions (splitToRows input)
+createBoard input = map createRow (splitToRows input)
 
 -- Splits the input grid into rows
 splitToRows :: String -> [String]
 splitToRows [] = []
 splitToRows input = [take 8 input] ++ splitToRows (drop 8 input)
 
--- Creates the initial positions of the board from the rows of the input grid
-createInitialPositions :: String -> [Pos]
-createInitialPositions [] = []
-createInitialPositions (pos:row) = ((digitToInt pos), False, -1) : createInitialPositions row
+-- Creates a row on the board from a row of the input grid
+createRow :: String -> [Pos]
+createRow [] = []
+createRow (pos:row) = ((digitToInt pos), False, -1) : createRow row
 
 -- Deletes the placed domino from the list of available dominos to place on the board
 deletePlacedDominoFromDominos :: [Dom] -> Dom -> [Dom]
@@ -117,7 +117,42 @@ findFirstPipIndices pos board = nub [(head (findRowInBoard row board), ind)| row
 findMatchingSecondPipIndices :: Pos -> (Int, Int) -> Board -> [(Int, Int)]
 findMatchingSecondPipIndices p ind board = [i | i <- findNeighbouringIndices ind, findPipOnIndex i board == p]
 
+-- Finds the indices where the domino can be placed on the board
+findMatchingIndices :: Dom -> Board -> [((Int, Int), (Int, Int))]
+findMatchingIndices dom board = [(ind, nind) | ind <- findFirstPipIndices ((fst (fst dom)), False, -1) board, nind <- findMatchingSecondPipIndices ((snd (fst dom)), False, -1) ind board]
 
+-- Updates the board by placing a domino on the list of indices
+updateBoard :: Board -> Dom -> [((Int, Int), (Int, Int))] -> [Board]
+updateBoard board dom inds = [setBoneOnPip (setBoneOnPip board dom (fst ind)) dom (snd ind) | ind <- inds]
 
+-- Replaces the position at the index with the specified position
+replaceNthInRow :: Int -> Pos -> Row -> Row
+replaceNthInRow n pos (x:xs) | n == 0    = pos:xs
+                             | otherwise = x:replaceNthInRow (n - 1) pos xs
+
+-- Replaces the row at the index with the specified row
+replaceNthInBoard :: Int -> Row -> Board -> Board
+replaceNthInBoard n row (x:xs) | n == 0    = row:xs
+                               | otherwise = x:replaceNthInBoard (n - 1) row xs
+
+-- Sets the bone of the position to the correct bone of the placed domino
+setBoneOnPip :: Board -> Dom -> (Int, Int) -> Board
+setBoneOnPip board dom ind = replaceNthInBoard (fst ind) (replaceNthInRow (snd ind) (getPip (findPipOnIndex ind board), True, snd dom) (getNthInBoard (fst ind) board)) board
+
+-- Returns the pip of a position
+getPip :: Pos -> Int
+getPip (pip, _, _) = pip
+
+-- Returnst he bone of a position
+getBone :: Pos -> Int
+getBone (_, _, bone) = bone
+
+-- Tries to place a domino on the board and returns the resulting boards
+tryDomino :: Dom -> Board -> [Board]
+tryDomino dom board = updateBoard board dom (findMatchingIndices dom board)
+
+-- Solve the domino board
+solve :: [Dom] -> Board -> [Board]
+solve doms board = tryDomino (head doms) board
 
 
