@@ -2,13 +2,17 @@
 
 import System.IO
 import Data.Char
+import Data.List
+import Data.Maybe
 
 -- A domino stone is a tuple with two pips
 type Dom = (Int, Int)
 -- A position is a tuple with the pip, whether or not the pip is occupied and the bone it is occupied with, if the pip is not occupied, the pip is -1
 type Pos = (Int, Bool, Int)
--- A board is a list with a list of positions
-type Board = [[Pos]]
+-- A row is a list of position
+type Row = [Pos]
+-- A board is a list with rows
+type Board = [Row]
 
 -- The main function
 theDominoEffect :: IO ()
@@ -65,3 +69,55 @@ splitToRows input = [take 8 input] ++ splitToRows (drop 8 input)
 createInitialPositions :: String -> [Pos]
 createInitialPositions [] = []
 createInitialPositions (pos:row) = ((digitToInt pos), False, -1) : createInitialPositions row
+
+-- Deletes the placed domino from the list of available dominos to place on the board
+deletePlacedDominoFromDominos :: [Dom] -> Dom -> [Dom]
+deletePlacedDominoFromDominos doms dom = [x | x <- doms, x /= dom]
+
+-- Finds the index of the row in the board
+findRowInBoard :: Row -> Board -> [Int]
+findRowInBoard xs xss = case (findIndex (== xs) xss) of
+                                 Nothing    -> []
+                                 Just index -> [index]
+
+-- Finds the indices of a pip in a row
+findIndicesInRow :: Pos -> Row -> [Int]
+findIndicesInRow x xs = findIndices (== x) xs
+
+-- Gets the nth element from a row
+getNthInRow :: Int -> Row -> Pos
+getNthInRow 0 xs = head xs
+getNthInRow n xs = getNthInRow (n - 1) (tail xs)
+
+-- Gets the nth row from a board
+getNthInBoard :: Int -> Board -> Row
+getNthInBoard 0 xss = head xss
+getNthInBoard n xss = getNthInBoard (n - 1) (tail xss)
+
+-- Finds the pip on the board at the specified index
+findPipOnIndex :: (Int, Int) -> Board -> Pos
+findPipOnIndex ind board = getNthInRow (snd ind) (getNthInBoard (fst ind) board)
+
+-- Finds the neighbouring pip indices for a given pip index
+findNeighbouringIndices :: (Int, Int) -> [(Int, Int)]
+findNeighbouringIndices ind | fst ind == 0 && snd ind == 0 = [(0, 1), (1, 0)]
+                            | fst ind == 0 && snd ind == 7 = [(0, 6), (1, 7)]
+                            | fst ind == 6 && snd ind == 0 = [(6, 1), (5, 0)]
+                            | fst ind == 6 && snd ind == 7 = [(6, 6), (5, 7)]
+                            | fst ind == 0 && snd ind < 7  = [(0, (snd ind) - 1), (0, (snd ind) + 1), (1, (snd ind))]
+                            | fst ind == 6 && snd ind > 0  = [(6, (snd ind) - 1), (6, (snd ind) + 1), (5, (snd ind))]
+                            | fst ind < 7  && snd ind == 0 = [((fst ind) - 1, 0), ((fst ind) + 1, 0), ((fst ind), 1)]
+                            | otherwise                    = [((fst ind) - 1, (snd ind)), ((fst ind) + 1, (snd ind)), ((fst ind), (snd ind) - 1), ((fst ind), (snd ind + 1))]
+
+-- Finds the indices of the first pip of the domino in the board
+findFirstPipIndices :: Pos -> Board -> [(Int, Int)]
+findFirstPipIndices pos board = nub [(head (findRowInBoard row board), ind)| row <- board, n <- row, n == pos, ind <- findIndicesInRow n row]
+
+-- Finds the indices of the pips that have the second pip and are neighbours of the first pip
+findMatchingSecondPipIndices :: Pos -> (Int, Int) -> Board -> [(Int, Int)]
+findMatchingSecondPipIndices p ind board = [i | i <- findNeighbouringIndices ind, findPipOnIndex i board == p]
+
+
+
+
+
