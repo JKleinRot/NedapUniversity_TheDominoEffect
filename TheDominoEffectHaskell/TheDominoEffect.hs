@@ -7,8 +7,8 @@ import Data.Maybe
 
 -- A domino stone is a tuple of a tuple with two pips and the bone of the domino
 type Dom = ((Int, Int), Int)
--- A position is a tuple with the pip, whether or not the pip is occupied and the bone it is occupied with, if the pip is not occupied, the pip is -1
-type Pos = (Int, Bool, Int)
+-- A position is a tuple with the pip and the bone it is occupied with, if the pip is not occupied, the pip is -1
+type Pos = (Int, Int)
 -- A row is a list of position
 type Row = [Pos]
 -- A board is a list with rows
@@ -68,7 +68,7 @@ splitToRows input = [take 8 input] ++ splitToRows (drop 8 input)
 -- Creates a row on the board from a row of the input grid
 createRow :: String -> [Pos]
 createRow [] = []
-createRow (pos:row) = ((digitToInt pos), False, -1) : createRow row
+createRow (pos:row) = ((digitToInt pos), -1) : createRow row
 
 -- Deletes the placed domino from the list of available dominos to place on the board
 deletePlacedDominoFromDominos :: [Dom] -> Dom -> [Dom]
@@ -119,7 +119,7 @@ findMatchingSecondPipIndices p ind board = [i | i <- findNeighbouringIndices ind
 
 -- Finds the indices where the domino can be placed on the board
 findMatchingIndices :: Dom -> Board -> [((Int, Int), (Int, Int))]
-findMatchingIndices dom board = [(ind, nind) | ind <- findFirstPipIndices ((fst (fst dom)), False, -1) board, nind <- findMatchingSecondPipIndices ((snd (fst dom)), False, -1) ind board]
+findMatchingIndices dom board = [(ind, nind) | ind <- findFirstPipIndices ((fst (fst dom)), -1) board, nind <- findMatchingSecondPipIndices ((snd (fst dom)), -1) ind board]
 
 -- Updates the board by placing a domino on the list of indices
 updateBoard :: Board -> Dom -> [((Int, Int), (Int, Int))] -> [Board]
@@ -137,15 +137,15 @@ replaceNthInBoard n row (x:xs) | n == 0    = row:xs
 
 -- Sets the bone of the position to the correct bone of the placed domino
 setBoneOnPip :: Board -> Dom -> (Int, Int) -> Board
-setBoneOnPip board dom ind = replaceNthInBoard (fst ind) (replaceNthInRow (snd ind) (getPip (findPipOnIndex ind board), True, snd dom) (getNthInBoard (fst ind) board)) board
+setBoneOnPip board dom ind = replaceNthInBoard (fst ind) (replaceNthInRow (snd ind) (getPip (findPipOnIndex ind board), snd dom) (getNthInBoard (fst ind) board)) board
 
 -- Returns the pip of a position
 getPip :: Pos -> Int
-getPip (pip, _, _) = pip
+getPip (pip, _) = pip
 
 -- Returnst he bone of a position
 getBone :: Pos -> Int
-getBone (_, _, bone) = bone
+getBone (_, bone) = bone
 
 -- Tries to place a domino on the board and returns the resulting boards
 tryDomino :: Dom -> Board -> [Board]
