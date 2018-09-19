@@ -74,11 +74,9 @@ createRow (pos:row) = ((digitToInt pos), -1) : createRow row
 deletePlacedDominoFromDominos :: [Dom] -> Dom -> [Dom]
 deletePlacedDominoFromDominos doms dom = [x | x <- doms, x /= dom]
 
--- Finds the index of the row in the board
+-- Finds the indices of the row in the board
 findRowInBoard :: Row -> Board -> [Int]
-findRowInBoard xs xss = case (findIndex (== xs) xss) of
-                                 Nothing    -> []
-                                 Just index -> [index]
+findRowInBoard xs xss = findIndices (== xs) xss
 
 -- Finds the indices of a pip in a row
 findIndicesInRow :: Pos -> Row -> [Int]
@@ -111,7 +109,7 @@ findNeighbouringIndices ind | fst ind == 0 && snd ind == 0 = [(0, 1), (1, 0)]
 
 -- Finds the indices of the first pip of the domino in the board
 findFirstPipIndices :: Pos -> Board -> [(Int, Int)]
-findFirstPipIndices pos board = nub [(head (findRowInBoard row board), ind)| row <- board, n <- row, n == pos, ind <- findIndicesInRow n row]
+findFirstPipIndices pos board = nub [(indb, indr)| row <- board, n <- row, n == pos, indr <- findIndicesInRow n row, indb <- findRowInBoard row board]
 
 -- Finds the indices of the pips that have the second pip and are neighbours of the first pip
 findMatchingSecondPipIndices :: Pos -> (Int, Int) -> Board -> [(Int, Int)]
@@ -143,16 +141,25 @@ setBoneOnPip board dom ind = replaceNthInBoard (fst ind) (replaceNthInRow (snd i
 getPip :: Pos -> Int
 getPip (pip, _) = pip
 
--- Returnst he bone of a position
+-- Returns the bone of a position
 getBone :: Pos -> Int
 getBone (_, bone) = bone
 
--- Tries to place a domino on the board and returns the resulting boards
+-- Tries to place a domino on the board and returns the resulting board
 tryDomino :: Dom -> Board -> [Board]
-tryDomino dom board = updateBoard board dom (findMatchingIndices dom board)
+tryDomino dom board = if length (findMatchingIndices dom board) == 1 then updateBoard board dom (findMatchingIndices dom board) else [board]
 
 -- Solve the domino board
 solve :: [Dom] -> Board -> [Board]
-solve doms board = tryDomino (head doms) board
+solve doms board = if length doms /= 0 then
+                         do let newBoard = head (tryDomino (head doms) board)
+                            let newDoms = deletePlacedDominoFromDominos doms (head doms)
+                            solve newDoms newBoard
+                   else
+                         [board]
+
+-- Whether or not the board is completely filled
+isFilled :: Board -> Bool
+isFilled board = length (filter (\pos -> (getBone pos) == (-1)) (concat board)) == 0
 
 
