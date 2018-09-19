@@ -197,6 +197,20 @@ solve' doms boards = if length doms == 0 then
                      else
                          concat (map (\board -> tryDomino (head doms) board) boards)
 
+solveBoard :: [Dom] -> Board -> [Board]
+solveBoard doms board = if length doms == 0 then
+                             [board]
+                        else
+                             if elem 0 (findMatchingIndicesAllDominos doms board) then
+                                     []
+                             else if elem 1 (findMatchingIndicesAllDominos doms board) then
+                                     [board]
+                             else []
+
+-- Finds the number of matching indices for all available dominos
+findMatchingIndicesAllDominos :: [Dom] -> Board -> [Int]
+findMatchingIndicesAllDominos doms board = [length (findMatchingIndices dom board) | dom <- doms]
+
 -- Whether or not the board is completely filled
 isFilled :: Board -> Bool
 isFilled board = numberOfUnfilledPositions board == 0
