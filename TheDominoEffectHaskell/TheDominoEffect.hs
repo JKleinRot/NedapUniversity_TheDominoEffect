@@ -49,12 +49,22 @@ isValidGrid input = length (filter (== '0') input) == 8 && length (filter (== '1
 -- Available domino stones
 dominos :: [Dom]
 dominos = [((0, 0), 1), ((0, 1), 2), ((0, 2), 3),  ((0, 3), 4),  ((0, 4), 5),  ((0, 5), 6),  ((0, 6), 7),
-                        ((1, 1), 8), ((2, 2), 9),  ((1, 3), 10), ((1, 4), 11), ((1, 5), 12), ((1, 6), 13),
+                        ((1, 1), 8), ((1, 2), 9),  ((1, 3), 10), ((1, 4), 11), ((1, 5), 12), ((1, 6), 13),
                                      ((2, 2), 14), ((2, 3), 15), ((2, 4), 16), ((2, 5), 17), ((2, 6), 18),
                                                    ((3, 3), 19), ((3, 4), 20), ((3, 5), 21), ((3, 6), 22),
                                                                  ((4, 4), 23), ((4, 5), 24), ((4, 6), 25),
                                                                                ((5, 5), 26), ((5, 6), 27),
                                                                                              ((6, 6), 28)]
+
+-- Indices on the domino board
+indices :: [(Int, Int)]
+indices = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
+           (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7),
+           (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7),
+           (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7),
+           (4, 0), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7),
+           (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7),
+           (6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7)]
 
 -- Creates a board from the input grid
 createBoard :: String -> Board
@@ -103,8 +113,9 @@ findNeighbouringIndices ind | fst ind == 0 && snd ind == 0 = [(0, 1), (1, 0)]
                             | fst ind == 6 && snd ind == 0 = [(6, 1), (5, 0)]
                             | fst ind == 6 && snd ind == 7 = [(6, 6), (5, 7)]
                             | fst ind == 0 && snd ind < 7  = [(0, (snd ind) - 1), (0, (snd ind) + 1), (1, (snd ind))]
-                            | fst ind == 6 && snd ind > 0  = [(6, (snd ind) - 1), (6, (snd ind) + 1), (5, (snd ind))]
-                            | fst ind < 7  && snd ind == 0 = [((fst ind) - 1, 0), ((fst ind) + 1, 0), ((fst ind), 1)]
+                            | fst ind == 6 && snd ind < 7  = [(6, (snd ind) - 1), (6, (snd ind) + 1), (5, (snd ind))]
+                            | fst ind < 6  && snd ind == 0 = [((fst ind) - 1, 0), ((fst ind) + 1, 0), ((fst ind), 1)]
+                            | fst ind < 6  && snd ind == 7 = [((fst ind) - 1, 7), ((fst ind) + 1, 7), ((fst ind), 6)]
                             | otherwise                    = [((fst ind) - 1, (snd ind)), ((fst ind) + 1, (snd ind)), ((fst ind), (snd ind) - 1), ((fst ind), (snd ind + 1))]
 
 -- Finds the indices of the first pip of the domino in the board
@@ -158,16 +169,16 @@ tryDomino dom board = if length (findMatchingIndices dom board) == 1 then
 solve :: [Dom] -> Board -> [Board]
 solve doms board = if length doms /= 0 then
                          do let newBoards = tryDomino (head doms) board
-                            if length newBoards == 1 then 
+                            if length newBoards == 1 then
                                  do let newBoard = head newBoards
                                     if not (isEqual board newBoard) then
                                          do let newDoms = deletePlacedDominoFromDominos doms (head doms)
                                             solve newDoms newBoard
                                     else
                                          do solve ((tail doms) ++ [head doms]) board
-                            else if length newBoards == 0 then 
+                            else if length newBoards == 0 then
                                 []
-                            else 
+                            else
                                 [head newBoards]
                    else
                          [board]
@@ -184,4 +195,36 @@ isEqual board newBoard = numberOfUnfilledPositions board == numberOfUnfilledPosi
 numberOfUnfilledPositions :: Board -> Int
 numberOfUnfilledPositions board = length (filter (\pos -> (getBone pos) == (-1)) (concat board))
 
+-- Finds the pairs of indices of forced positions
+findForcedPositionsIndices :: Board -> [((Int, Int), (Int, Int))]
+findForcedPositionsIndices board = [(ind, nind) | ind <- indices, nind <- findOpenNeighbouringIndices board ind, length (findOpenNeighbouringIndices board ind) == 1]
+
+-- Finds the pips on the index of the forced position
+findPipsOnForcedPositionsIndex :: Board -> ((Int, Int), (Int, Int)) -> (Pos, Pos)
+findPipsOnForcedPositionsIndex board ind = (findPipOnIndex (fst ind) board, findPipOnIndex (snd ind) board)
+
+-- Finds the domino that can be placed on the index of the forced position
+findDominoOnForcedPositionIndex :: [Dom] -> (Pos, Pos) -> Dom
+findDominoOnForcedPositionIndex doms poss = findDomino doms (getPip (fst poss), getPip (snd poss))
+
+-- Updates the board for one forced position
+updateBoardForcedPosition :: Board -> [Dom] -> ((Int, Int), (Int, Int)) -> [Board]
+updateBoardForcedPosition board doms inds = updateBoard board (findDominoOnForcedPositionIndex doms (findPipsOnForcedPositionsIndex board inds)) [inds]
+
+-- Updates the board for all forced positions
+updateBoardForcedPositions :: Board -> [Dom] -> [((Int, Int),(Int, Int))] -> [Board]
+updateBoardForcedPositions board _ [] = [board]
+updateBoardForcedPositions board doms inds = updateBoardForcedPositions (head (updateBoardForcedPosition board doms (head inds))) doms (tail inds)
+
+-- Finds the indices of open neighbours of an index
+findOpenNeighbouringIndices :: Board -> (Int, Int) -> [(Int, Int)]
+findOpenNeighbouringIndices board ind = findOpenIndices board (findNeighbouringIndices ind) 
+
+-- Finds the open indices from a list of indices
+findOpenIndices :: Board -> [(Int, Int)] -> [(Int,Int)]
+findOpenIndices board inds = filter (\ind -> getBone (findPipOnIndex ind board) == (-1)) inds
+
+-- Finds a domino from the list of dominos based on the pips of the domino
+findDomino :: [Dom] -> (Int, Int) -> Dom
+findDomino doms (x,y) = head (filter (\dom -> fst dom == (x,y) || fst dom == (y,x)) doms) 
 
