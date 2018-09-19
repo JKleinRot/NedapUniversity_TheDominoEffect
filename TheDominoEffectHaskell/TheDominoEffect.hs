@@ -147,19 +147,41 @@ getBone (_, bone) = bone
 
 -- Tries to place a domino on the board and returns the resulting board
 tryDomino :: Dom -> Board -> [Board]
-tryDomino dom board = if length (findMatchingIndices dom board) == 1 then updateBoard board dom (findMatchingIndices dom board) else [board]
+tryDomino dom board = if length (findMatchingIndices dom board) == 1 then
+                             updateBoard board dom (findMatchingIndices dom board) 
+                      else if length (findMatchingIndices dom board) == 0 then
+                             []
+                      else
+                             [board]
 
 -- Solve the domino board
 solve :: [Dom] -> Board -> [Board]
 solve doms board = if length doms /= 0 then
-                         do let newBoard = head (tryDomino (head doms) board)
-                            let newDoms = deletePlacedDominoFromDominos doms (head doms)
-                            solve newDoms newBoard
+                         do let newBoards = tryDomino (head doms) board
+                            if length newBoards == 1 then 
+                                 do let newBoard = head newBoards
+                                    if not (isEqual board newBoard) then
+                                         do let newDoms = deletePlacedDominoFromDominos doms (head doms)
+                                            solve newDoms newBoard
+                                    else
+                                         do solve ((tail doms) ++ [head doms]) board
+                            else if length newBoards == 0 then 
+                                []
+                            else 
+                                [head newBoards]
                    else
                          [board]
 
 -- Whether or not the board is completely filled
 isFilled :: Board -> Bool
-isFilled board = length (filter (\pos -> (getBone pos) == (-1)) (concat board)) == 0
+isFilled board = numberOfUnfilledPositions board == 0
+
+-- Whether or not the board is equal depending on the number of unfilled positions
+isEqual :: Board -> Board -> Bool
+isEqual board newBoard = numberOfUnfilledPositions board == numberOfUnfilledPositions newBoard
+
+-- Calculates the number of unfilled positions
+numberOfUnfilledPositions :: Board -> Int
+numberOfUnfilledPositions board = length (filter (\pos -> (getBone pos) == (-1)) (concat board))
 
 
