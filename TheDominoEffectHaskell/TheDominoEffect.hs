@@ -127,8 +127,16 @@ findMatchingSecondPipIndices :: Pos -> (Int, Int) -> Board -> [(Int, Int)]
 findMatchingSecondPipIndices p ind board = [i | i <- findNeighbouringIndices ind, findPipOnIndex i board == p]
 
 -- Finds the indices where the domino can be placed on the board
+findMatchingIndicesWithDuplicates :: Dom -> Board -> [((Int, Int), (Int, Int))]
+findMatchingIndicesWithDuplicates dom board = [(ind, nind) | ind <- findFirstPipIndices ((fst (fst dom)), -1) board, nind <- findMatchingSecondPipIndices ((snd (fst dom)), -1) ind board]
+
 findMatchingIndices :: Dom -> Board -> [((Int, Int), (Int, Int))]
-findMatchingIndices dom board = [(ind, nind) | ind <- findFirstPipIndices ((fst (fst dom)), -1) board, nind <- findMatchingSecondPipIndices ((snd (fst dom)), -1) ind board]
+findMatchingIndices ((x,y),b) board | x == y    = dropAlternatingIndex (findMatchingIndicesWithDuplicates ((x,y),b) board)
+                                    | otherwise = findMatchingIndicesWithDuplicates ((x,y),b) board
+
+dropAlternatingIndex :: [((Int, Int), (Int, Int))] -> [((Int, Int), (Int, Int))]
+dropAlternatingIndex [] = []
+dropAlternatingIndex (i:ii:inds) = i:dropAlternatingIndex inds
 
 -- Updates the board by placing a domino on the list of indices
 updateBoard :: Board -> Dom -> [((Int, Int), (Int, Int))] -> [Board]
@@ -182,6 +190,12 @@ solve doms board = if length doms /= 0 then
                                 [head newBoards]
                    else
                          [board]
+
+solve' :: [Dom] -> [Board] -> [Board]
+solve' doms boards = if length doms == 0 then
+                         boards
+                     else
+                         concat (map (\board -> tryDomino (head doms) board) boards)
 
 -- Whether or not the board is completely filled
 isFilled :: Board -> Bool
