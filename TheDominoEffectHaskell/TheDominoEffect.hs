@@ -232,13 +232,13 @@ findDominoOnForcedPositionIndex :: [Dom] -> (Pos, Pos) -> Dom
 findDominoOnForcedPositionIndex doms poss = findDomino doms (getPip (fst poss), getPip (snd poss))
 
 -- Updates the board for one forced position
-updateBoardForcedPosition :: Board -> [Dom] -> ((Int, Int), (Int, Int)) -> [Board]
-updateBoardForcedPosition board doms inds = updateBoard board (findDominoOnForcedPositionIndex doms (findPipsOnForcedPositionsIndex board inds)) [inds]
+updateBoardForcedPosition :: Board -> [Dom] -> ((Int, Int), (Int, Int)) -> Board
+updateBoardForcedPosition board doms i = updateBoard' board (findDominoOnForcedPositionIndex doms (findPipsOnForcedPositionsIndex board i)) i
 
 -- Updates the board for all forced positions
 updateBoardForcedPositions :: Board -> [Dom] -> [((Int, Int),(Int, Int))] -> [Board]
-updateBoardForcedPositions board _ [] = [board]
-updateBoardForcedPositions board doms inds = updateBoardForcedPositions (head (updateBoardForcedPosition board doms (head inds))) doms (tail inds)
+updateBoardForcedPositions board _ [] = []
+updateBoardForcedPositions board doms inds = updateBoardForcedPositions (updateBoardForcedPosition board doms (head inds)) doms (tail inds)
 
 -- Finds the indices of open neighbours of an index
 findOpenNeighbouringIndices :: Board -> (Int, Int) -> [(Int, Int)]
@@ -287,6 +287,12 @@ placeDominosMoreFit' doms board = placeDominosMoreFit moreFitMatchingIndex fitti
                                         moreFitMatchingIndex = head (filter (\x -> length x > 1) matchingIndices)
                                         fittingDominosMoreFit = findDominosOneFit board doms moreFitMatchingIndex
                                         remainingDominosMoreFit = deletePlacedDominoFromDominos doms (head fittingDominosMoreFit)
+
+placeDominosForcedPositions' :: [Dom] -> Board -> (Board, [Dom])
+placeDominosForcedPositions' doms board = (placeDominos forcedPositions fittingDominos board, remainingDominos)
+                                          where forcedPositions = findForcedPositionsIndices board
+                                                fittingDominos = findDominosOneFit board doms forcedPositions
+                                                remainingDominos = deletePlacedDominosFromDominos doms fittingDominos
 
 -- Updates the board by placing a domino on the list of indices
 updateBoard' :: Board -> Dom -> ((Int, Int), (Int, Int)) -> Board
