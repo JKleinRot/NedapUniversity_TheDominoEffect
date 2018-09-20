@@ -265,8 +265,8 @@ solveBoard :: [Dom] -> Board -> [Board]
 solveBoard [] board = [board]
 solveBoard doms board | not (null (filter (\x -> length x == 0) matchingIndices)) = []
                       | not (null (oneFitMatchingIndices))                        = solveBoard remainingDominos (placeDominos (concat oneFitMatchingIndices) fittingDominos board)
-                      | otherwise                                                 = placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board
-                      -- | otherwise                                                 = map (\b -> solveBoard remainingDominosMoreFit b) (placeDominos moreFitMatchingIndex fittingDominosMoreFit board)
+                      -- | otherwise                                                 = placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board
+                      | otherwise                                                 = concat (map (\b -> solveBoard remainingDominosMoreFit b) (placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board))
                       where matchingIndices = findMatchingIndicesAllDominos doms board
                             oneFitMatchingIndices = filter (\x -> length x == 1) matchingIndices
                             moreFitMatchingIndex = head (filter (\x -> length x > 1) matchingIndices)
