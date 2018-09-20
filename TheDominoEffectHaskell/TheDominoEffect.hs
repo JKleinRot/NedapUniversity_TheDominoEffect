@@ -20,6 +20,7 @@ theDominoEffect = do putStrLn "Please enter the 7 x 8 domino grid. Enter each nu
                      input <- getLine
                      if (isValidInput input) then 
                              do let board = createBoard(input)
+                                putStrLn (show board)
                                 showInputBoard board
                                 let solvedBoards = solveBoard dominos board
                                 sequence_ (map showOutputBoard solvedBoards)
@@ -157,13 +158,15 @@ findMatchingSecondPipIndices p ind board = [i | i <- findNeighbouringIndices ind
 findMatchingIndicesWithDuplicates :: Dom -> Board -> [((Int, Int), (Int, Int))]
 findMatchingIndicesWithDuplicates dom board = [(ind, nind) | ind <- findFirstPipIndices ((fst (fst dom)), -1) board, nind <- findMatchingSecondPipIndices ((snd (fst dom)), -1) ind board]
 
+-- Finds matching indices for a domino without duplicates
 findMatchingIndices :: Dom -> Board -> [((Int, Int), (Int, Int))]
-findMatchingIndices ((x,y),b) board | x == y    = dropAlternatingIndex (findMatchingIndicesWithDuplicates ((x,y),b) board)
-                                    | otherwise = findMatchingIndicesWithDuplicates ((x,y),b) board
+findMatchingIndices dom board = removeMatchingIndex (findMatchingIndicesWithDuplicates dom board)
 
-dropAlternatingIndex :: [((Int, Int), (Int, Int))] -> [((Int, Int), (Int, Int))]
-dropAlternatingIndex [] = []
-dropAlternatingIndex (i:ii:inds) = i:dropAlternatingIndex inds
+-- Removes duplicate indices
+removeMatchingIndex :: [((Int, Int), (Int, Int))] -> [((Int, Int), (Int, Int))]
+removeMatchingIndex [] = []
+removeMatchingIndex (((a,b),(c,d)):is) | elem ((c,d),(a,b)) is = removeMatchingIndex is
+                                       | otherwise             = ((a,b),(c,d)):removeMatchingIndex is
 
 -- Updates the board by placing a domino on the list of indices
 updateBoard :: Board -> Dom -> [((Int, Int), (Int, Int))] -> [Board]
@@ -267,6 +270,22 @@ solveBoard doms board | not (null (filter (\x -> length x == 0) matchingIndices)
 placeDominos :: [((Int, Int), (Int, Int))] -> [Dom] -> Board -> Board
 placeDominos [][] board = board
 placeDominos (i:is) (d:ds) board = placeDominos is ds (updateBoard' board d i)
+
+-- FOR TESTING EACH ROUND OF RECURSION
+placeDominos' :: [Dom] -> Board -> (Board, [Dom])
+placeDominos' doms board = (placeDominos (concat oneFitMatchingIndices) fittingDominos board, remainingDominos)
+                           where matchingIndices = findMatchingIndicesAllDominos doms board
+                                 oneFitMatchingIndices = filter (\x -> length x == 1) matchingIndices
+                                 fittingDominos = findDominosOneFit board doms (concat oneFitMatchingIndices)
+                                 remainingDominos = deletePlacedDominosFromDominos doms fittingDominos
+
+-- FOR TESTING EACH ROUND OF RECURSION
+placeDominosMoreFit' :: [Dom] -> Board -> [Board]
+placeDominosMoreFit' doms board = placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board 
+                                  where matchingIndices = findMatchingIndicesAllDominos doms board
+                                        moreFitMatchingIndex = head (filter (\x -> length x > 1) matchingIndices)
+                                        fittingDominosMoreFit = findDominosOneFit board doms moreFitMatchingIndex
+                                        remainingDominosMoreFit = deletePlacedDominoFromDominos doms (head fittingDominosMoreFit)
 
 -- Updates the board by placing a domino on the list of indices
 updateBoard' :: Board -> Dom -> ((Int, Int), (Int, Int)) -> Board
