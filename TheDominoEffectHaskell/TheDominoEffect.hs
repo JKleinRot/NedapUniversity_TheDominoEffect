@@ -20,10 +20,37 @@ theDominoEffect = do putStrLn "Please enter the 7 x 8 domino grid. Enter each nu
                      input <- getLine
                      if (isValidInput input) then 
                              do let board = createBoard(input)
-                                putStrLn (show board)
+                                showInputBoard board
+                                let solvedBoards = solveBoard dominos board
+                                sequence_ (map showOutputBoard solvedBoards)
                      else 
                              do putStrLn "The entered domino grid was not valid."
                                 theDominoEffect
+
+showInputBoard :: Board -> IO ()
+showInputBoard board = do putStrLn "Input: "
+                          sequence_ (map (\r -> showInputRow r) board)
+                          putStrLn ""
+
+showInputRow :: Row -> IO ()
+showInputRow row = do sequence_ (map (\p -> showInputPip p) row)
+                      putStrLn ""
+
+showInputPip :: Pos -> IO () 
+showInputPip pos = putStr ("   " ++ (show (getPip pos)))
+
+showOutputBoard :: Board -> IO ()
+showOutputBoard board = do putStrLn "Output: "
+                           sequence_ (map (\r -> showOutputRow r) board)
+                           putStrLn ""
+
+showOutputRow :: Row -> IO ()
+showOutputRow row = do sequence_ (map (\p -> showOutputBone p) row)
+                       putStrLn ""
+
+showOutputBone :: Pos -> IO ()
+showOutputBone pos | getBone pos < 10 = putStr ("   " ++ (show (getBone pos)))
+                   | otherwise        = putStr ("  " ++ (show (getBone pos)))
 
 -- Checks whether the input grid is valid
 isValidInput :: String -> Bool
@@ -173,30 +200,6 @@ tryDomino dom board = if length (findMatchingIndices dom board) == 1 then
                       else
                              [board]
 
--- Solve the domino board
-solve :: [Dom] -> Board -> [Board]
-solve doms board = if length doms /= 0 then
-                         do let newBoards = tryDomino (head doms) board
-                            if length newBoards == 1 then
-                                 do let newBoard = head newBoards
-                                    if not (isEqual board newBoard) then
-                                         do let newDoms = deletePlacedDominoFromDominos doms (head doms)
-                                            solve newDoms newBoard
-                                    else
-                                         do solve ((tail doms) ++ [head doms]) board
-                            else if length newBoards == 0 then
-                                []
-                            else
-                                [head newBoards]
-                   else
-                         [board]
-
-solve' :: [Dom] -> [Board] -> [Board]
-solve' doms boards = if length doms == 0 then
-                         boards
-                     else
-                         concat (map (\board -> tryDomino (head doms) board) boards)
-
 -- Finds the number of matching indices for all available dominos
 findMatchingIndicesAllDominos :: [Dom] -> Board -> [[((Int, Int),(Int, Int))]]
 findMatchingIndicesAllDominos doms board = [findMatchingIndices dom board | dom <- doms]
@@ -246,26 +249,11 @@ findOpenIndices board inds = filter (\ind -> getBone (findPipOnIndex ind board) 
 findDomino :: [Dom] -> (Int, Int) -> Dom
 findDomino doms (x,y) = head (filter (\dom -> fst dom == (x,y) || fst dom == (y,x)) doms) 
 
-
--- -- ONLY ONE BOARD REMAINS AFTER THE SOLVE METHODS
--- solveBoard :: [Dom] -> Board -> [Board]
--- solveBoard [] board = [board]
--- solveBoard doms board = do let matchingIndices = findMatchingIndicesAllDominos doms board
---                            if length (filter (\x -> length x == 0) matchingIndices) /= 0 then 
---                                  []
---                            else if length (filter (\x -> length x == 1) matchingIndices) /= 0 then
---                                  -- change board for each indices
---                                  -- find forced positions
---                                  -- recursive solveBoard if board is different from begin board
---                            else 
---                                  -- make two boards and call recursive solveBoard twice for each board
-
--- THIS GOES OKAY FOR ONE LOOP OF ONE FIT DOMINOS, CANNOT SOLVE THE BOARD WITH ONLY THIS
+-- Solves the input board
 solveBoard :: [Dom] -> Board -> [Board]
 solveBoard [] board = [board]
 solveBoard doms board | not (null (filter (\x -> length x == 0) matchingIndices)) = []
                       | not (null (oneFitMatchingIndices))                        = solveBoard remainingDominos (placeDominos (concat oneFitMatchingIndices) fittingDominos board)
-                      -- | otherwise                                                 = placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board
                       | otherwise                                                 = concat (map (\b -> solveBoard remainingDominosMoreFit b) (placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board))
                       where matchingIndices = findMatchingIndicesAllDominos doms board
                             oneFitMatchingIndices = filter (\x -> length x == 1) matchingIndices
