@@ -197,19 +197,9 @@ solve' doms boards = if length doms == 0 then
                      else
                          concat (map (\board -> tryDomino (head doms) board) boards)
 
-solveBoard :: [Dom] -> Board -> [Board]
-solveBoard doms board = if length doms == 0 then
-                             [board]
-                        else
-                             if elem 0 (findMatchingIndicesAllDominos doms board) then
-                                     []
-                             else if elem 1 (findMatchingIndicesAllDominos doms board) then
-                                     [board]
-                             else []
-
 -- Finds the number of matching indices for all available dominos
-findMatchingIndicesAllDominos :: [Dom] -> Board -> [Int]
-findMatchingIndicesAllDominos doms board = [length (findMatchingIndices dom board) | dom <- doms]
+findMatchingIndicesAllDominos :: [Dom] -> Board -> [[((Int, Int),(Int, Int))]]
+findMatchingIndicesAllDominos doms board = [findMatchingIndices dom board | dom <- doms]
 
 -- Whether or not the board is completely filled
 isFilled :: Board -> Bool
@@ -256,3 +246,48 @@ findOpenIndices board inds = filter (\ind -> getBone (findPipOnIndex ind board) 
 findDomino :: [Dom] -> (Int, Int) -> Dom
 findDomino doms (x,y) = head (filter (\dom -> fst dom == (x,y) || fst dom == (y,x)) doms) 
 
+
+-- -- ONLY ONE BOARD REMAINS AFTER THE SOLVE METHODS
+-- solveBoard :: [Dom] -> Board -> [Board]
+-- solveBoard [] board = [board]
+-- solveBoard doms board = do let matchingIndices = findMatchingIndicesAllDominos doms board
+--                            if length (filter (\x -> length x == 0) matchingIndices) /= 0 then 
+--                                  []
+--                            else if length (filter (\x -> length x == 1) matchingIndices) /= 0 then
+--                                  -- change board for each indices
+--                                  -- find forced positions
+--                                  -- recursive solveBoard if board is different from begin board
+--                            else 
+--                                  -- make two boards and call recursive solveBoard twice for each board
+
+-- THIS GOES OKAY FOR ONE LOOP OF ONE FIT DOMINOS, CANNOT SOLVE THE BOARD WITH ONLY THIS
+solveBoard :: [Dom] -> Board -> [Board]
+solveBoard [] board = [board]
+solveBoard doms board | not (null (filter (\x -> length x == 0) matchingIndices)) = []
+                      | not (null (oneFitMatchingIndices))                        = [placeDominos (concat oneFitMatchingIndices) fittingDominos board]
+                      | otherwise                                                 = []
+                      where matchingIndices = findMatchingIndicesAllDominos doms board
+                            oneFitMatchingIndices = filter (\x -> length x == 1) matchingIndices
+                            fittingDominos = findDominosOneFit board doms (concat oneFitMatchingIndices)
+                            remainingDominos = deletePlacedDominosFromDominos doms fittingDominos
+
+-- Place the one fit dominos on the board
+placeDominos :: [((Int, Int), (Int, Int))] -> [Dom] -> Board -> Board
+placeDominos [][] board = board
+placeDominos (i:is) (d:ds) board = placeDominos is ds (updateBoard' board d i)
+
+-- Updates the board by placing a domino on the list of indices
+updateBoard' :: Board -> Dom -> ((Int, Int), (Int, Int)) -> Board
+updateBoard' board dom i = setBoneOnPip (setBoneOnPip board dom (fst i)) dom (snd i)
+
+-- Finds the dominos that fit on the one fit indices
+findDominosOneFit :: Board -> [Dom] -> [((Int, Int), (Int, Int))] -> [Dom]
+findDominosOneFit board doms is = [findDominoOnOneFitIndex board doms i | i <- is]
+
+-- Finds the pips on the index of the forced position
+findDominoOnOneFitIndex :: Board -> [Dom] -> ((Int, Int), (Int, Int)) -> Dom
+findDominoOnOneFitIndex board doms ind = findDomino doms (getPip (findPipOnIndex (fst ind) board), getPip(findPipOnIndex (snd ind) board))
+
+-- Deletes the placed domino from the list of available dominos to place on the board
+deletePlacedDominosFromDominos :: [Dom] -> [Dom] -> [Dom]
+deletePlacedDominosFromDominos ds dds = [d | d <- ds, not (elem d dds)]
