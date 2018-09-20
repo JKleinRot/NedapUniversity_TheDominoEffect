@@ -264,12 +264,16 @@ findDomino doms (x,y) = head (filter (\dom -> fst dom == (x,y) || fst dom == (y,
 solveBoard :: [Dom] -> Board -> [Board]
 solveBoard [] board = [board]
 solveBoard doms board | not (null (filter (\x -> length x == 0) matchingIndices)) = []
-                      | not (null (oneFitMatchingIndices))                        = [placeDominos (concat oneFitMatchingIndices) fittingDominos board]
-                      | otherwise                                                 = []
+                      | not (null (oneFitMatchingIndices))                        = solveBoard remainingDominos (placeDominos (concat oneFitMatchingIndices) fittingDominos board)
+                      | otherwise                                                 = placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board
+                      -- | otherwise                                                 = map (\b -> solveBoard remainingDominosMoreFit b) (placeDominos moreFitMatchingIndex fittingDominosMoreFit board)
                       where matchingIndices = findMatchingIndicesAllDominos doms board
                             oneFitMatchingIndices = filter (\x -> length x == 1) matchingIndices
+                            moreFitMatchingIndex = head (filter (\x -> length x > 1) matchingIndices)
                             fittingDominos = findDominosOneFit board doms (concat oneFitMatchingIndices)
+                            fittingDominosMoreFit = findDominosOneFit board doms moreFitMatchingIndex
                             remainingDominos = deletePlacedDominosFromDominos doms fittingDominos
+                            remainingDominosMoreFit = deletePlacedDominoFromDominos doms (head fittingDominosMoreFit)
 
 -- Place the one fit dominos on the board
 placeDominos :: [((Int, Int), (Int, Int))] -> [Dom] -> Board -> Board
@@ -291,3 +295,8 @@ findDominoOnOneFitIndex board doms ind = findDomino doms (getPip (findPipOnIndex
 -- Deletes the placed domino from the list of available dominos to place on the board
 deletePlacedDominosFromDominos :: [Dom] -> [Dom] -> [Dom]
 deletePlacedDominosFromDominos ds dds = [d | d <- ds, not (elem d dds)]
+
+-- Place the one fit dominos on the board
+placeDominosMoreFit :: [((Int, Int), (Int, Int))] -> [Dom] -> Board -> [Board]
+placeDominosMoreFit (i:[]) (d:[]) board = [updateBoard' board d i]
+placeDominosMoreFit (i:is) (d:ds) board = (updateBoard' board d i):(placeDominosMoreFit is ds board)
