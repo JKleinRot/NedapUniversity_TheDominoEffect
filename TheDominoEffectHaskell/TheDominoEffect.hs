@@ -254,7 +254,8 @@ findDomino doms (x,y) = head (filter (\dom -> fst dom == (x,y) || fst dom == (y,
 
 -- Solves the input board
 solveBoard :: [Dom] -> Board -> [Board]
-solveBoard [] board = [board]
+solveBoard [] board | isFilled board = [board]
+                    | otherwise      = []
 solveBoard doms board | not (null (filter (\x -> length x == 0) matchingIndices)) = []
                       | not (null (oneFitMatchingIndices))                        = solveBoard remainingDominos (placeDominos (concat oneFitMatchingIndices) fittingDominos board)
                       | otherwise                                                 = concat (map (\b -> solveBoard remainingDominosMoreFit b) (placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board))
