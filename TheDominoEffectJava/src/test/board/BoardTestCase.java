@@ -1,11 +1,22 @@
 package test.board;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import main.board.Board;
+import main.board.Board.Index;
+import main.board.Board.PairOfIndices;
+import main.board.Dominos;
+import main.board.Dominos.Domino;
+import main.board.Dominos.Pips;
 import main.exception.InvalidInputException;
 import main.exception.InvalidInputGridException;
 import main.exception.InvalidInputSizeException;
@@ -14,9 +25,12 @@ public class BoardTestCase {
 	
 	private Board board;
 	
+	private Dominos dominos;
+	
 	@BeforeEach
 	public void setup() throws InvalidInputException, InvalidInputSizeException, InvalidInputGridException {
 		board = new Board("66265241132010341324665410432112513604555540260360534203");
+		dominos = new Dominos();
 	}
 	
 	@Test
@@ -26,5 +40,18 @@ public class BoardTestCase {
 		assertThrows(InvalidInputSizeException.class, () -> new Board("0123456"));
 		assertThrows(InvalidInputSizeException.class, () -> new Board("012345601234560123456012345601234560123456012345601234560123456"));
 		assertThrows(InvalidInputGridException.class, () -> new Board("66666666666666666666666666666666666666666666666666666666"));
+	}
+	
+	@Test
+	public void testFindMatchingIndices() {
+		Map<Domino, List<PairOfIndices>> expectedMatchingIndices = new HashMap<>();
+		Pips pips = new Pips(0,0);
+		expectedMatchingIndices.put(dominos.getDomino(pips), Arrays.asList(new PairOfIndices(new Index(5,6), new Index(6,6)), new PairOfIndices(new Index(6,6), new Index(5,6))));
+		
+		Map<Domino, List<PairOfIndices>> matchingIndices = board.findMatchingIndices(dominos);
+		
+		for (PairOfIndices pair : expectedMatchingIndices.get(dominos.getDomino(pips))) {
+			assertTrue(matchingIndices.get(dominos.getDomino(pips)).contains(pair));
+		}
 	}
 }

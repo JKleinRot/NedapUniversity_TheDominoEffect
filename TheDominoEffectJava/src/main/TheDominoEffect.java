@@ -15,7 +15,7 @@ public class TheDominoEffect {
 
 	/** The scanner to read input */
 	private static Scanner in;
-	
+
 	private final Solver solver;
 
 	/**
@@ -26,8 +26,13 @@ public class TheDominoEffect {
 		solver = new SolverImpl();
 	}
 
+	/**
+	 * Asks for an input domino board, finds the solutions and displays the input
+	 * domino board and the solutions.
+	 */
 	public void run() {
-		String input = readInput("Please enter the 7 x 8 domino grid. Enter each number starting at the top left number and work your way down row wise to the bottom right number of the grid:");
+		String input = readInput(
+				"Please enter the 7 x 8 domino grid. Enter each number starting at the top left number and work your way down row wise to the bottom right number of the grid:");
 		try {
 			solver.solve(input);
 		} catch (InvalidInputException e) {
@@ -37,7 +42,8 @@ public class TheDominoEffect {
 			System.out.println("The entered domino grid was not valid since the input did not contain 56 characters");
 			run();
 		} catch (InvalidInputGridException e) {
-			System.out.println("The entered domino grid was not valid since the amount of each pip in the grid was not correct");
+			System.out.println(
+					"The entered domino grid was not valid since the amount of each pip in the grid was not correct");
 			run();
 		}
 	}
