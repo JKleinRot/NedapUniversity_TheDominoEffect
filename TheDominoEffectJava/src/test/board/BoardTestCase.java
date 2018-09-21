@@ -1,8 +1,10 @@
 package test.board;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +19,7 @@ import main.board.Board.PairOfIndices;
 import main.board.Dominos;
 import main.board.Dominos.Domino;
 import main.board.Dominos.Pips;
+import main.board.Position;
 import main.exception.InvalidInputException;
 import main.exception.InvalidInputGridException;
 import main.exception.InvalidInputSizeException;
@@ -27,10 +30,13 @@ public class BoardTestCase {
 	
 	private Dominos dominos;
 	
+	private Domino domino;
+	
 	@BeforeEach
 	public void setup() throws InvalidInputException, InvalidInputSizeException, InvalidInputGridException {
 		board = new Board("66265241132010341324665410432112513604555540260360534203");
 		dominos = new Dominos();
+		domino = dominos.getDomino(new Pips(0,0));
 	}
 	
 	@Test
@@ -45,13 +51,20 @@ public class BoardTestCase {
 	@Test
 	public void testFindMatchingIndices() {
 		Map<Domino, List<PairOfIndices>> expectedMatchingIndices = new HashMap<>();
-		Pips pips = new Pips(0,0);
-		expectedMatchingIndices.put(dominos.getDomino(pips), Arrays.asList(new PairOfIndices(new Index(5,6), new Index(6,6)), new PairOfIndices(new Index(6,6), new Index(5,6))));
+		expectedMatchingIndices.put(domino, Arrays.asList(new PairOfIndices(new Index(6,6), new Index(5,6))));
 		
 		Map<Domino, List<PairOfIndices>> matchingIndices = board.findMatchingIndices(dominos);
 		
-		for (PairOfIndices pair : expectedMatchingIndices.get(dominos.getDomino(pips))) {
-			assertTrue(matchingIndices.get(dominos.getDomino(pips)).contains(pair));
+		for (PairOfIndices pair : expectedMatchingIndices.get(domino)) {
+			assertTrue(matchingIndices.get(domino).contains(pair));
 		}
+	}
+	
+	@Test
+	public void testPlaceDominos() {
+		Board after = board.placeDomino(domino, new PairOfIndices(new Index(6,6), new Index(5,6)));
+		
+		assertEquals(new Position(0).withBone(domino.getBone()), after.getPosition(new Index(6,6)));
+		assertEquals(new Position(0).withBone(domino.getBone()), after.getPosition(new Index(5,6)));
 	}
 }

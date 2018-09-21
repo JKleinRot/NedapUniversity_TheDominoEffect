@@ -56,6 +56,10 @@ public class Board {
 		}
 	}
 
+	public Position getPosition(final Index index) {
+		return positions[index.getRow()][index.getColumn()];
+	}
+	
 	/**
 	 * Finds the matching indices on the board for each of the dominos.
 	 * 
@@ -65,7 +69,24 @@ public class Board {
 	 */
 	public Map<Domino, List<PairOfIndices>> findMatchingIndices(final Dominos dominos) {
 		Map<Domino, List<Index>> matchingIndicesFirstPip = findMatchingIndicesFirstPip(dominos);
-		return findMatchingIndicesSecondPip(dominos, matchingIndicesFirstPip);
+		return removeDuplicates(findMatchingPairsOfIndices(dominos, matchingIndicesFirstPip));
+	}
+
+	/**
+	 * Places the domino on the board.
+	 * 
+	 * @param domino
+	 *            The domino
+	 * @param indices
+	 *            The indices
+	 * @return The resulting board
+	 */
+	public Board placeDomino(final Domino domino, final PairOfIndices indices) {
+		Position first = positions[indices.getFirstIndex().getRow()][indices.getFirstIndex().getColumn()];
+		Position second = positions[indices.getSecondIndex().getRow()][indices.getSecondIndex().getColumn()];
+		positions[indices.getFirstIndex().getRow()][indices.getFirstIndex().getColumn()] = first.withBone(domino.getBone());
+		positions[indices.getSecondIndex().getRow()][indices.getSecondIndex().getColumn()]= second.withBone(domino.getBone());
+		return this;
 	}
 
 	/**
@@ -93,7 +114,16 @@ public class Board {
 		return firstPipIndices;
 	}
 
-	private Map<Domino, List<PairOfIndices>> findMatchingIndicesSecondPip(final Dominos dominos,
+	/**
+	 * Finds the matching pairs of indices for the list of dominos
+	 * 
+	 * @param dominos
+	 *            The dominos
+	 * @param matchingIndicesFirstPip
+	 *            the indices for the first pips
+	 * @return The matching pairs of indices
+	 */
+	private Map<Domino, List<PairOfIndices>> findMatchingPairsOfIndices(final Dominos dominos,
 			final Map<Domino, List<Index>> matchingIndicesFirstPip) {
 		Map<Domino, List<PairOfIndices>> matchingNeighboursOfIndices = new HashMap<>();
 		for (Map.Entry<Domino, List<Index>> matchingIndexFirstPip : matchingIndicesFirstPip.entrySet()) {
@@ -114,6 +144,31 @@ public class Board {
 	}
 
 	/**
+	 * Removes duplicate pairs of indices for each domino.
+	 * 
+	 * @param pairs
+	 *            The pairs of indices
+	 * @return The pairs of indices without duplicates
+	 */
+	private Map<Domino, List<PairOfIndices>> removeDuplicates(final Map<Domino, List<PairOfIndices>> matchingIndices) {
+		Map<Domino, List<PairOfIndices>> pairsWithoutDuplicates = new HashMap<>();
+		for (Map.Entry<Domino, List<PairOfIndices>> matchingIndex : matchingIndices.entrySet()) {
+			List<PairOfIndices> pairsWithDuplicates = new ArrayList<>(matchingIndex.getValue());
+			List<PairOfIndices> toRemove = new ArrayList<>();
+			for (PairOfIndices pair : pairsWithDuplicates) {
+				if (pairsWithDuplicates.contains(pair.switchIndices()) && !toRemove.contains(pair.switchIndices())) {
+					toRemove.add(pair);
+				}
+			}
+			for (PairOfIndices remove : toRemove) {
+				pairsWithDuplicates.remove(remove);
+			}
+			pairsWithoutDuplicates.put(matchingIndex.getKey(), pairsWithDuplicates);
+		}
+		return pairsWithoutDuplicates;
+	}
+
+	/**
 	 * Finds the list of neighbouring indices for the index
 	 * 
 	 * @param index
@@ -130,21 +185,20 @@ public class Board {
 		} else if (index.getRow() == 6 && index.getColumn() == 7) {
 			return Arrays.asList(new Index(6, 6), new Index(5, 7));
 		} else if (index.getRow() == 0) {
-			return Arrays.asList(new Index(0, index.getColumn() - 1),
-					new Index(0, index.getColumn() + 1), new Index(1, index.getColumn()));
+			return Arrays.asList(new Index(0, index.getColumn() - 1), new Index(0, index.getColumn() + 1),
+					new Index(1, index.getColumn()));
 		} else if (index.getRow() == 6) {
-			return Arrays.asList(new Index(6, index.getColumn() - 1),
-					new Index(6, index.getColumn() + 1), new Index(5, index.getColumn()));
+			return Arrays.asList(new Index(6, index.getColumn() - 1), new Index(6, index.getColumn() + 1),
+					new Index(5, index.getColumn()));
 		} else if (index.getColumn() == 0) {
-			return Arrays.asList(new Index(index.getRow() - 1, 0),
-					new Index(index.getRow() + 1, 0), new Index(index.getRow(), 1));
+			return Arrays.asList(new Index(index.getRow() - 1, 0), new Index(index.getRow() + 1, 0),
+					new Index(index.getRow(), 1));
 		} else if (index.getColumn() == 7) {
-			return Arrays.asList(new Index(index.getRow() - 1, 7),
-					new Index(index.getRow() + 1, 7), new Index(index.getRow(), 6));
+			return Arrays.asList(new Index(index.getRow() - 1, 7), new Index(index.getRow() + 1, 7),
+					new Index(index.getRow(), 6));
 		} else {
 			return Arrays.asList(new Index(index.getRow() - 1, index.getColumn()),
-					new Index(index.getRow() + 1, index.getColumn()),
-					new Index(index.getRow(), index.getColumn() - 1),
+					new Index(index.getRow() + 1, index.getColumn()), new Index(index.getRow(), index.getColumn() - 1),
 					new Index(index.getRow(), index.getColumn() + 1));
 		}
 	}
@@ -238,14 +292,25 @@ public class Board {
 		public Index getSecondIndex() {
 			return second;
 		}
-		
+
+		/**
+		 * Returns a pair of indices with the indices switched.
+		 * 
+		 * @return A pair of indices with the indices switched
+		 */
+		public PairOfIndices switchIndices() {
+			return new PairOfIndices(second, first);
+		}
+
 		@Override
 		public boolean equals(Object pair) {
-			if (first.equals(((PairOfIndices) pair).getFirstIndex()) && second.equals(((PairOfIndices) pair).getSecondIndex())) {
+			if (first.equals(((PairOfIndices) pair).getFirstIndex())
+					&& second.equals(((PairOfIndices) pair).getSecondIndex())) {
 				return true;
-			} else if (first.equals(((PairOfIndices) pair).getSecondIndex()) && second.equals(((PairOfIndices) pair).getFirstIndex())) {
+			} else if (first.equals(((PairOfIndices) pair).getSecondIndex())
+					&& second.equals(((PairOfIndices) pair).getFirstIndex())) {
 				return true;
-			} 
+			}
 			return false;
 		}
 	}

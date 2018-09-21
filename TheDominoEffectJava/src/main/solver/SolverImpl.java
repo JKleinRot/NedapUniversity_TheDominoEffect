@@ -1,7 +1,9 @@
 package main.solver;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import main.board.Board;
 import main.board.Dominos;
@@ -41,7 +43,59 @@ public class SolverImpl implements Solver {
 	public void solve(final String input)
 			throws InvalidInputException, InvalidInputSizeException, InvalidInputGridException {
 		createBoard(input);
+		List<Board> = solveBoard();
 		Map<Domino, List<PairOfIndices>> matchingIndices = board.findMatchingIndices(dominos);
+	}
+
+	private List<Board> solveBoard() {
+		List<Board> solutions = new ArrayList<>();
+		Map<Domino, List<PairOfIndices>> matchingIndices = board.findMatchingIndices(dominos);
+		if (hasUnplacableDominos(matchingIndices)) {
+			return new ArrayList<>();
+		}
+		Map<Domino, PairOfIndices> oneFitDominos = getOneFitDominos(matchingIndices);
+		if (oneFitDominos.size() > 0) {
+			for (Map.Entry<Domino, PairOfIndices> domino : oneFitDominos.entrySet()) {
+				placeDomino(domino.getKey(), domino.getValue());
+			}
+		}
+	}
+
+	/**
+	 * Places the domino on the board.
+	 * 
+	 * @param domino
+	 *            The domino
+	 * @param indices
+	 *            The indices
+	 */
+	private void placeDomino(final Domino domino, final PairOfIndices indices) {
+		board = board.placeDomino(domino, indices);
+	}
+
+	/**
+	 * Whether or not one or more of the dominos is unplacable on the board.
+	 * 
+	 * @param matchingIndices
+	 *            The matching indices
+	 * @return Whether or not one or more or the dominos is unplacable
+	 */
+	private boolean hasUnplacableDominos(final Map<Domino, List<PairOfIndices>> matchingIndices) {
+		return matchingIndices.entrySet().stream().filter(i -> i.getValue().size() == 0)
+				.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue())).size() > 0;
+	}
+
+	/**
+	 * Returns the dominos which can be placed on only one index and the
+	 * corresponding indices.
+	 * 
+	 * @param matchingIndices
+	 *            The matching indices
+	 * @return The dominos and indices for one fit dominos
+	 */
+	private Map<Domino, PairOfIndices> getOneFitDominos(final Map<Domino, List<PairOfIndices>> matchingIndices) {
+		return matchingIndices.entrySet().stream().filter(i -> i.getValue().size() == 1)
+				.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().get(0)));
 	}
 
 	/**

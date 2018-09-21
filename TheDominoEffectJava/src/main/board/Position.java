@@ -78,4 +78,9 @@ public class Position {
 	public Position withBone(final int bone) {
 		return new Position(bone, pip);
 	}
+	
+	@Override
+	public boolean equals(Object position) {
+		return pip == ((Position) position).getPip() && bone == ((Position) position).getBone() && isOccupied == ((Position) position).isOccupied(); 
+	}
 }
