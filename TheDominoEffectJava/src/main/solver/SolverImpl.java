@@ -15,17 +15,14 @@ import main.exception.InvalidInputSizeException;
 
 public class SolverImpl implements Solver {
 
-	/** The board */
-	private Board board;
-
-	/** The dominos */
-	private Dominos dominos;
+	/** The solutions */
+	private List<Board> solutions;
 
 	/**
 	 * Constructor.
 	 */
 	public SolverImpl() {
-		dominos = new Dominos();
+		solutions = new ArrayList<>();
 	}
 
 	/**
@@ -40,37 +37,43 @@ public class SolverImpl implements Solver {
 	 * @throws InvalidInputGridException
 	 *             If the input contains not all pips in the correct amounts
 	 */
-	public void solve(final String input)
+	public List<Board> solve(final String input)
 			throws InvalidInputException, InvalidInputSizeException, InvalidInputGridException {
-		createBoard(input);
-		List<Board> = solveBoard();
-		Map<Domino, List<PairOfIndices>> matchingIndices = board.findMatchingIndices(dominos);
+		Board board = createBoard(input);
+		Dominos dominos = new Dominos();
+		solveBoard(board, dominos);
+		return solutions;
 	}
 
-	private List<Board> solveBoard() {
-		List<Board> solutions = new ArrayList<>();
+	private void solveBoard(final Board board, final Dominos dominos) {
+		if (dominos.isEmpty()) {
+			solutions.add(board);
+			return;
+		}
 		Map<Domino, List<PairOfIndices>> matchingIndices = board.findMatchingIndices(dominos);
 		if (hasUnplacableDominos(matchingIndices)) {
-			return new ArrayList<>();
+			return;
 		}
 		Map<Domino, PairOfIndices> oneFitDominos = getOneFitDominos(matchingIndices);
 		if (oneFitDominos.size() > 0) {
 			for (Map.Entry<Domino, PairOfIndices> domino : oneFitDominos.entrySet()) {
-				placeDomino(domino.getKey(), domino.getValue());
+				board.placeDomino(domino.getKey(), domino.getValue());
+				dominos.removeDomino(domino.getKey());
+			}
+			solveBoard(board, dominos);
+		} else {
+			Map<Domino, List<PairOfIndices>> moreFitDominos = getMoreFitDominos(matchingIndices);
+			if (!moreFitDominos.isEmpty()) { 
+				Domino moreFitDomino = (Domino) moreFitDominos.keySet().toArray()[0];
+				for (PairOfIndices pair : moreFitDominos.get(moreFitDomino)) {
+					Board newBoard = board.clone().placeDomino(moreFitDomino, pair);
+					Dominos newDominos = dominos.clone().removeDomino(moreFitDomino);
+					solveBoard(newBoard, newDominos);
+				}
+			} else {
+				solutions.add(board);
 			}
 		}
-	}
-
-	/**
-	 * Places the domino on the board.
-	 * 
-	 * @param domino
-	 *            The domino
-	 * @param indices
-	 *            The indices
-	 */
-	private void placeDomino(final Domino domino, final PairOfIndices indices) {
-		board = board.placeDomino(domino, indices);
 	}
 
 	/**
@@ -98,11 +101,17 @@ public class SolverImpl implements Solver {
 				.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().get(0)));
 	}
 
+	private Map<Domino, List<PairOfIndices>> getMoreFitDominos(final Map<Domino, List<PairOfIndices>> matchingIndices) {
+		return matchingIndices.entrySet().stream().filter(i -> i.getValue().size() > 1)
+				.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+	}
+
 	/**
-	 * Creates the domino board from the input.
+	 * Returns the domino board created from the input.
 	 * 
 	 * @param input
 	 *            The input
+	 * @return The new board
 	 * @throws InvalidInputException
 	 *             If the input contains other characters than the integers 0 to 6
 	 * @throws InvalidInputSizeException
@@ -110,9 +119,9 @@ public class SolverImpl implements Solver {
 	 * @throws InvalidInputGridException
 	 *             If the input contains not all pips in the correct amounts
 	 */
-	private void createBoard(final String input)
+	private Board createBoard(final String input)
 			throws InvalidInputException, InvalidInputSizeException, InvalidInputGridException {
-		board = new Board(input);
+		return new Board(input);
 	}
 
 }

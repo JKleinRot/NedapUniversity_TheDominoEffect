@@ -46,6 +46,10 @@ public class Dominos {
 		dominos.add(new Domino(new Pips(5, 6), 27));
 		dominos.add(new Domino(new Pips(6, 6), 28));
 	}
+	
+	private Dominos(final List<Domino> dominos) {
+		this.dominos = dominos;
+	}
 
 	/**
 	 * Returns the dominos.
@@ -54,6 +58,14 @@ public class Dominos {
 	 */
 	public List<Domino> getDominos() {
 		return dominos;
+	}
+	
+	public Dominos clone() {
+		return new Dominos(new ArrayList<>(dominos));
+	}
+	
+	public boolean isEmpty() {
+		return dominos.size() == 0;
 	}
 
 	/**
@@ -70,6 +82,11 @@ public class Dominos {
 						|| (p.getPips().getFirstPip() == pips.getSecondPip()
 								&& p.getPips().getSecondPip() == pips.getFirstPip()))
 				.collect(Collectors.toList()).get(0);
+	}
+	
+	public Dominos removeDomino(final Domino domino) {
+		dominos.remove(domino);
+		return this;
 	}
 
 	/**

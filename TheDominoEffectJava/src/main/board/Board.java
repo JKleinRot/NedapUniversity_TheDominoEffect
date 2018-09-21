@@ -56,10 +56,35 @@ public class Board {
 		}
 	}
 
+	/**
+	 * Constructor for copying.
+	 * 
+	 * @param positions
+	 *            The current positions
+	 */
+	private Board(final Position[][] positions) {
+		this.positions = positions;
+	}
+
+	/**
+	 * Returns a cloned board.
+	 * 
+	 * @return The cloned board
+	 */
+	public Board clone() {
+		final Position[][] copiedPositions = new Position[7][8];
+		for (int x = 0; x < 7; x++) {
+			for (int y = 0; y < 8; y++) {
+				copiedPositions[x][y] = positions[x][y];
+			}
+		}
+		return new Board(copiedPositions);
+	}
+
 	public Position getPosition(final Index index) {
 		return positions[index.getRow()][index.getColumn()];
 	}
-	
+
 	/**
 	 * Finds the matching indices on the board for each of the dominos.
 	 * 
@@ -84,8 +109,10 @@ public class Board {
 	public Board placeDomino(final Domino domino, final PairOfIndices indices) {
 		Position first = positions[indices.getFirstIndex().getRow()][indices.getFirstIndex().getColumn()];
 		Position second = positions[indices.getSecondIndex().getRow()][indices.getSecondIndex().getColumn()];
-		positions[indices.getFirstIndex().getRow()][indices.getFirstIndex().getColumn()] = first.withBone(domino.getBone());
-		positions[indices.getSecondIndex().getRow()][indices.getSecondIndex().getColumn()]= second.withBone(domino.getBone());
+		positions[indices.getFirstIndex().getRow()][indices.getFirstIndex().getColumn()] = first
+				.withBone(domino.getBone());
+		positions[indices.getSecondIndex().getRow()][indices.getSecondIndex().getColumn()] = second
+				.withBone(domino.getBone());
 		return this;
 	}
 
@@ -306,9 +333,6 @@ public class Board {
 		public boolean equals(Object pair) {
 			if (first.equals(((PairOfIndices) pair).getFirstIndex())
 					&& second.equals(((PairOfIndices) pair).getSecondIndex())) {
-				return true;
-			} else if (first.equals(((PairOfIndices) pair).getSecondIndex())
-					&& second.equals(((PairOfIndices) pair).getFirstIndex())) {
 				return true;
 			}
 			return false;

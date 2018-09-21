@@ -1,5 +1,8 @@
 package main.solver;
 
+import java.util.List;
+
+import main.board.Board;
 import main.exception.InvalidInputException;
 import main.exception.InvalidInputGridException;
 import main.exception.InvalidInputSizeException;
@@ -11,6 +14,8 @@ public interface Solver {
 	 * 
 	 * @param input
 	 *            The input grid
+	 * @return The solutions
 	 */
-	public void solve(final String input) throws InvalidInputException, InvalidInputSizeException, InvalidInputGridException;
+	public List<Board> solve(final String input)
+			throws InvalidInputException, InvalidInputSizeException, InvalidInputGridException;
 }

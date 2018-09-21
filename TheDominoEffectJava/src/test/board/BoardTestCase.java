@@ -36,7 +36,7 @@ public class BoardTestCase {
 	public void setup() throws InvalidInputException, InvalidInputSizeException, InvalidInputGridException {
 		board = new Board("66265241132010341324665410432112513604555540260360534203");
 		dominos = new Dominos();
-		domino = dominos.getDomino(new Pips(0,0));
+		domino = dominos.getDomino(new Pips(4,4));
 	}
 	
 	@Test
@@ -54,6 +54,7 @@ public class BoardTestCase {
 		expectedMatchingIndices.put(domino, Arrays.asList(new PairOfIndices(new Index(6,6), new Index(5,6))));
 		
 		Map<Domino, List<PairOfIndices>> matchingIndices = board.findMatchingIndices(dominos);
+		List<PairOfIndices> list = matchingIndices.get(domino);
 		
 		for (PairOfIndices pair : expectedMatchingIndices.get(domino)) {
 			assertTrue(matchingIndices.get(domino).contains(pair));
@@ -62,9 +63,9 @@ public class BoardTestCase {
 	
 	@Test
 	public void testPlaceDominos() {
-		Board after = board.placeDomino(domino, new PairOfIndices(new Index(6,6), new Index(5,6)));
+		board.placeDomino(domino, new PairOfIndices(new Index(6,6), new Index(5,6)));
 		
-		assertEquals(new Position(0).withBone(domino.getBone()), after.getPosition(new Index(6,6)));
-		assertEquals(new Position(0).withBone(domino.getBone()), after.getPosition(new Index(5,6)));
+		assertEquals(new Position(0).withBone(domino.getBone()), board.getPosition(new Index(6,6)));
+		assertEquals(new Position(0).withBone(domino.getBone()), board.getPosition(new Index(5,6)));
 	}
 }
