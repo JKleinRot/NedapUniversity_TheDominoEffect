@@ -1,8 +1,8 @@
 package main.board;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * The dominos that can be placed on the board.
@@ -10,50 +10,123 @@ import java.util.Map;
 public class Dominos {
 
 	/** The dominos */
-	private Map<Pips, Integer> dominos;
+	private List<Domino> dominos;
 
 	/**
 	 * Constructor.
 	 */
 	public Dominos() {
-		dominos.put(new Pips(0, 0), 1);
-		dominos.put(new Pips(0, 1), 2);
-		dominos.put(new Pips(0, 2), 3);
-		dominos.put(new Pips(0, 3), 4);
-		dominos.put(new Pips(0, 4), 5);
-		dominos.put(new Pips(0, 5), 6);
-		dominos.put(new Pips(0, 6), 7);
-		dominos.put(new Pips(1, 1), 8);
-		dominos.put(new Pips(1, 2), 9);
-		dominos.put(new Pips(1, 3), 10);
-		dominos.put(new Pips(1, 4), 11);
-		dominos.put(new Pips(1, 5), 12);
-		dominos.put(new Pips(1, 6), 13);
-		dominos.put(new Pips(2, 2), 14);
-		dominos.put(new Pips(2, 3), 15);
-		dominos.put(new Pips(2, 4), 16);
-		dominos.put(new Pips(2, 5), 17);
-		dominos.put(new Pips(2, 6), 18);
-		dominos.put(new Pips(3, 3), 19);
-		dominos.put(new Pips(3, 4), 20);
-		dominos.put(new Pips(3, 5), 21);
-		dominos.put(new Pips(3, 6), 22);
-		dominos.put(new Pips(4, 4), 23);
-		dominos.put(new Pips(4, 5), 24);
-		dominos.put(new Pips(4, 6), 25);
-		dominos.put(new Pips(5, 5), 26);
-		dominos.put(new Pips(5, 6), 27);
-		dominos.put(new Pips(6, 6), 28);
+		dominos = new ArrayList<>();
+		dominos.add(new Domino(new Pips(0, 0), 1));
+		dominos.add(new Domino(new Pips(0, 1), 2));
+		dominos.add(new Domino(new Pips(0, 2), 3));
+		dominos.add(new Domino(new Pips(0, 3), 4));
+		dominos.add(new Domino(new Pips(0, 4), 5));
+		dominos.add(new Domino(new Pips(0, 5), 6));
+		dominos.add(new Domino(new Pips(0, 6), 7));
+		dominos.add(new Domino(new Pips(1, 1), 8));
+		dominos.add(new Domino(new Pips(1, 2), 9));
+		dominos.add(new Domino(new Pips(1, 3), 10));
+		dominos.add(new Domino(new Pips(1, 4), 11));
+		dominos.add(new Domino(new Pips(1, 5), 12));
+		dominos.add(new Domino(new Pips(1, 6), 13));
+		dominos.add(new Domino(new Pips(2, 2), 14));
+		dominos.add(new Domino(new Pips(2, 3), 15));
+		dominos.add(new Domino(new Pips(2, 4), 16));
+		dominos.add(new Domino(new Pips(2, 5), 17));
+		dominos.add(new Domino(new Pips(2, 6), 18));
+		dominos.add(new Domino(new Pips(3, 3), 19));
+		dominos.add(new Domino(new Pips(3, 4), 20));
+		dominos.add(new Domino(new Pips(3, 5), 21));
+		dominos.add(new Domino(new Pips(3, 6), 22));
+		dominos.add(new Domino(new Pips(4, 4), 23));
+		dominos.add(new Domino(new Pips(4, 5), 24));
+		dominos.add(new Domino(new Pips(4, 6), 25));
+		dominos.add(new Domino(new Pips(5, 5), 26));
+		dominos.add(new Domino(new Pips(5, 6), 27));
+		dominos.add(new Domino(new Pips(6, 6), 28));
 	}
 
-	public Map<Pips, Integer> getDominos() {
+	/**
+	 * Returns the dominos.
+	 * 
+	 * @return The dominos
+	 */
+	public List<Domino> getDominos() {
 		return dominos;
+	}
+
+	/**
+	 * Returns the domino corresponding to the pips.
+	 * 
+	 * @param pips
+	 *            The pips
+	 * @return The domino
+	 */
+	public Domino getDomino(final Pips pips) {
+		return dominos.stream()
+				.filter(p -> (p.getPips().getFirstPip() == pips.getFirstPip()
+						&& p.getPips().getSecondPip() == pips.getSecondPip())
+						|| (p.getPips().getFirstPip() == pips.getSecondPip()
+								&& p.getPips().getSecondPip() == pips.getFirstPip()))
+				.collect(Collectors.toList()).get(0);
+	}
+
+	/**
+	 * A domino stone.
+	 */
+	public static class Domino {
+
+		/** The pips */
+		private final Pips pips;
+
+		/** The bone */
+		private final int bone;
+
+		/**
+		 * Constructor.
+		 * 
+		 * @param pips
+		 *            The pips
+		 * @param bone
+		 *            The bone
+		 */
+		public Domino(final Pips pips, final int bone) {
+			this.pips = pips;
+			this.bone = bone;
+		}
+
+		/**
+		 * Returns the pips.
+		 * 
+		 * @return The pips
+		 */
+		public Pips getPips() {
+			return pips;
+		}
+
+		/**
+		 * Returns the bone.
+		 * 
+		 * @return The bone
+		 */
+		public int getBone() {
+			return bone;
+		}
+
+		@Override
+		public boolean equals(Object domino) {
+			if (bone == ((Domino) domino).getBone() && pips.equals(getPips())) {
+				return true;
+			}
+			return false;
+		}
 	}
 
 	/**
 	 * The pips of a domino.
 	 */
-	public class Pips {
+	public static class Pips {
 
 		/** The first pip */
 		private int first;
@@ -90,6 +163,17 @@ public class Dominos {
 		 */
 		public int getSecondPip() {
 			return second;
+		}
+
+		@Override
+		public boolean equals(Object pips) {
+			if (first == ((Pips) pips).getFirstPip() && second == ((Pips) pips).getSecondPip()) {
+				return true;
+			} else if (first == ((Pips) pips).getSecondPip() && second == ((Pips) pips).getFirstPip()) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 }
