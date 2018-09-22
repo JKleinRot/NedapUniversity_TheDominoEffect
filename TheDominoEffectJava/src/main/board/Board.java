@@ -84,6 +84,47 @@ public class Board {
 	public Position getPosition(final Index index) {
 		return positions[index.getRow()][index.getColumn()];
 	}
+	
+	public boolean isFilled() {
+		for (int x = 0; x < 7; x++) {
+			for (int y = 0; y < 8; y++) {
+				if (!positions[x][y].isOccupied()) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	public void showPips() {
+		StringBuilder builder = new StringBuilder();
+		for (int x = 0; x < 7; x++) {
+			for (int y = 0; y < 8; y++) {
+				builder.append("   " + positions[x][y].getPip());
+				if (y == 7) {
+					builder.append("\n");
+				}
+			}
+		}
+		System.out.println(builder.toString());
+	}
+	
+	public void showBones() {
+		StringBuilder builder = new StringBuilder();
+		for (int x = 0; x < 7; x++) {
+			for (int y = 0; y < 8; y++) {
+				if (positions[x][y].getBone() < 10) {
+					builder.append("   " + positions[x][y].getBone()); 
+				} else {
+					builder.append("  " + positions[x][y].getBone());
+				}
+				if (y == 7) {
+					builder.append("\n");
+				}
+			}
+		}
+		System.out.println(builder.toString());
+	}
 
 	/**
 	 * Finds the matching indices on the board for each of the dominos.

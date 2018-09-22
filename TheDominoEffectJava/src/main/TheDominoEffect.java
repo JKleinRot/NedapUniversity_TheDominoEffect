@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import main.board.Board;
+import main.board.Position;
 import main.exception.InvalidInputException;
 import main.exception.InvalidInputGridException;
 import main.exception.InvalidInputSizeException;
@@ -16,7 +17,7 @@ import main.solver.SolverImpl;
 public class TheDominoEffect {
 
 	/** The scanner to read input */
-	private static Scanner in;
+	private final Scanner in;
 
 	private final Solver solver;
 
@@ -33,11 +34,11 @@ public class TheDominoEffect {
 	 * domino board and the solutions.
 	 */
 	public void run() {
-		String input = readInput(
+		final String input = readInput(
 				"Please enter the 7 x 8 domino grid. Enter each number starting at the top left number and work your way down row wise to the bottom right number of the grid:");
 		try {
-			List<Board> solutions = solver.solve(input);
-			// Display input and solutions
+			final List<Board> solutions = solver.solve(input);
+			showSolutions(solutions);
 		} catch (InvalidInputException e) {
 			System.out.println("The entered domino grid was not valid since it contained characters other than 0..6.");
 			run();
@@ -48,6 +49,22 @@ public class TheDominoEffect {
 			System.out.println(
 					"The entered domino grid was not valid since the amount of each pip in the grid was not correct");
 			run();
+		}
+	}
+
+	/**
+	 * Shows the solutions on the console.
+	 * 
+	 * @param solutions
+	 *            The solutions
+	 */
+	private void showSolutions(final List<Board> solutions) {
+		System.out.println("Input: ");
+		solutions.get(0).showPips();
+		solutions.remove(0);
+		for (Board board : solutions) {
+			System.out.println("Output: ");
+			board.showBones();
 		}
 	}
 
@@ -68,7 +85,7 @@ public class TheDominoEffect {
 	}
 
 	public static void main(String args[]) {
-		TheDominoEffect theDominoEffect = new TheDominoEffect();
+		final TheDominoEffect theDominoEffect = new TheDominoEffect();
 		theDominoEffect.run();
 	}
 }

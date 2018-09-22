@@ -41,12 +41,13 @@ public class SolverImpl implements Solver {
 			throws InvalidInputException, InvalidInputSizeException, InvalidInputGridException {
 		Board board = createBoard(input);
 		Dominos dominos = new Dominos();
+		solutions.add(board.clone());
 		solveBoard(board, dominos);
 		return solutions;
 	}
 
 	private void solveBoard(final Board board, final Dominos dominos) {
-		if (dominos.isEmpty()) {
+		if (dominos.isEmpty() && board.isFilled()) {
 			solutions.add(board);
 			return;
 		}
@@ -70,7 +71,7 @@ public class SolverImpl implements Solver {
 					Dominos newDominos = dominos.clone().removeDomino(moreFitDomino);
 					solveBoard(newBoard, newDominos);
 				}
-			} else {
+			} else if (board.isFilled()) {
 				solutions.add(board);
 			}
 		}
