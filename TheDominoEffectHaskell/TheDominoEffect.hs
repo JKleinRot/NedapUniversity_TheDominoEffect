@@ -1,9 +1,10 @@
--- The Domino Effect
-
 import System.IO
 import Data.Char
 import Data.List
 import Data.Maybe
+
+-- TYPES 
+---------------------------------------------------------------------------------------------------
 
 -- A domino stone is a tuple of a tuple with two pips and the bone of the domino
 type Dom = ((Int, Int), Int)
@@ -14,65 +15,8 @@ type Row = [Pos]
 -- A board is a list with rows
 type Board = [Row]
 
--- The main function
-theDominoEffect :: IO ()
-theDominoEffect = do putStrLn "Please enter the 7 x 8 domino grid. Enter each number starting at the top left number and work your way down row wise to the bottom right number of the grid: "
-                     input <- getLine
-                     if (isValidInput input) then 
-                             do let board = createBoard(input)
-                                putStrLn (show board)
-                                showInputBoard board
-                                let solvedBoards = solveBoard dominos board
-                                sequence_ (map showOutputBoard solvedBoards)
-                     else 
-                             do putStrLn "The entered domino grid was not valid."
-                                theDominoEffect
-
-showInputBoard :: Board -> IO ()
-showInputBoard board = do putStrLn "Input: "
-                          sequence_ (map (\r -> showInputRow r) board)
-                          putStrLn ""
-
-showInputRow :: Row -> IO ()
-showInputRow row = do sequence_ (map (\p -> showInputPip p) row)
-                      putStrLn ""
-
-showInputPip :: Pos -> IO () 
-showInputPip pos = putStr ("   " ++ (show (getPip pos)))
-
-showOutputBoard :: Board -> IO ()
-showOutputBoard board = do putStrLn "Output: "
-                           sequence_ (map (\r -> showOutputRow r) board)
-                           putStrLn ""
-
-showOutputRow :: Row -> IO ()
-showOutputRow row = do sequence_ (map (\p -> showOutputBone p) row)
-                       putStrLn ""
-
-showOutputBone :: Pos -> IO ()
-showOutputBone pos | getBone pos < 10 = putStr ("   " ++ (show (getBone pos)))
-                   | otherwise        = putStr ("  " ++ (show (getBone pos)))
-
--- Checks whether the input grid is valid
-isValidInput :: String -> Bool
-isValidInput input = if not (areCorrectDigits input) then 
-                             False 
-                     else if length input /= 56 then 
-                             False 
-                     else if not (isValidGrid input) then
-                             False
-                     else 
-                             True
-
--- Checks whether the input grid only consists of the digits 0..6
-areCorrectDigits :: String -> Bool
-areCorrectDigits [] = True
-areCorrectDigits (x:xs) = isDigit x && digitToInt x <= 6 && areCorrectDigits xs
-
--- Checks whether the input grid contains each valid digit eight times
-isValidGrid :: String -> Bool
-isValidGrid input = length (filter (== '0') input) == 8 && length (filter (== '1') input) == 8 && length (filter (== '2') input) == 8 && length (filter (== '3') input) == 8 &&
-                    length (filter (== '4') input) == 8 && length (filter (== '5') input) == 8 && length (filter (== '6') input) == 8
+-- CONSTANTS 
+---------------------------------------------------------------------------------------------------
 
 -- Available domino stones
 dominos :: [Dom]
@@ -94,6 +38,49 @@ indices = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
            (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7),
            (6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7)]
 
+-- MAIN FUNCTIONS
+---------------------------------------------------------------------------------------------------
+
+-- The main function that is called to solve the domino board
+theDominoEffect :: IO ()
+theDominoEffect = do putStrLn "Please enter the 7 x 8 domino grid. Enter each number starting at the top left number and work your way down row wise to the bottom right number of the grid: "
+                     input <- getLine
+                     if (isValidInput input) then 
+                             do let board = createBoard(input)
+                                showInputBoard board
+                                let solvedBoards = solveBoard dominos board
+                                sequence_ (map showOutputBoard solvedBoards)
+                     else 
+                             do putStrLn "The entered domino grid was not valid."
+                                theDominoEffect
+
+-- CHECKING INPUT BOARD
+---------------------------------------------------------------------------------------------------
+
+-- Checks whether the input board is valid
+isValidInput :: String -> Bool
+isValidInput input = if not (areCorrectDigits input) then 
+                             False 
+                     else if length input /= 56 then 
+                             False 
+                     else if not (isValidGrid input) then
+                             False
+                     else 
+                             True
+
+-- Checks whether the input grid only consists of the digits 0..6
+areCorrectDigits :: String -> Bool
+areCorrectDigits [] = True
+areCorrectDigits (x:xs) = isDigit x && digitToInt x <= 6 && areCorrectDigits xs
+
+-- Checks whether the input grid contains each valid digit eight times
+isValidGrid :: String -> Bool
+isValidGrid input = length (filter (== '0') input) == 8 && length (filter (== '1') input) == 8 && length (filter (== '2') input) == 8 && length (filter (== '3') input) == 8 &&
+                    length (filter (== '4') input) == 8 && length (filter (== '5') input) == 8 && length (filter (== '6') input) == 8
+
+-- CREATING BOARD FROM INPUT
+---------------------------------------------------------------------------------------------------
+
 -- Creates a board from the input grid
 createBoard :: String -> Board
 createBoard input = map createRow (splitToRows input)
@@ -108,31 +95,63 @@ createRow :: String -> [Pos]
 createRow [] = []
 createRow (pos:row) = ((digitToInt pos), -1) : createRow row
 
--- Deletes the placed domino from the list of available dominos to place on the board
-deletePlacedDominoFromDominos :: [Dom] -> Dom -> [Dom]
-deletePlacedDominoFromDominos doms dom = [x | x <- doms, x /= dom]
+-- GENERAL FUNCTIONS USED THROUGHOUT THE CODE
+---------------------------------------------------------------------------------------------------
 
--- Finds the indices of the row in the board
-findRowInBoard :: Row -> Board -> [Int]
-findRowInBoard xs xss = findIndices (== xs) xss
+-- Returns the pip of a position
+getPip :: Pos -> Int
+getPip (pip, _) = pip
 
--- Finds the indices of a pip in a row
-findIndicesInRow :: Pos -> Row -> [Int]
-findIndicesInRow x xs = findIndices (== x) xs
+-- Returns the bone of a position
+getBone :: Pos -> Int
+getBone (_, bone) = bone
 
--- Gets the nth element from a row
-getNthInRow :: Int -> Row -> Pos
-getNthInRow 0 xs = head xs
-getNthInRow n xs = getNthInRow (n - 1) (tail xs)
+-- SOLVING THE BOARD
+---------------------------------------------------------------------------------------------------
 
--- Gets the nth row from a board
-getNthInBoard :: Int -> Board -> Row
-getNthInBoard 0 xss = head xss
-getNthInBoard n xss = getNthInBoard (n - 1) (tail xss)
+-- Solves the input board
+solveBoard :: [Dom] -> Board -> [Board]
+solveBoard [] board | isFilled board = [board]
+                    | otherwise      = []
+solveBoard doms board | not (null (filter (\x -> length x == 0) matchingIndices)) = []
+                      | not (null (oneFitMatchingIndices))                        = solveBoard remainingDominos (placeDominos (concat oneFitMatchingIndices) fittingDominos board)
+                      | otherwise                                                 = concat (map (\b -> solveBoard remainingDominosMoreFit b) (placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board))
+                      where matchingIndices = findMatchingIndicesAllDominos doms board
+                            oneFitMatchingIndices = filter (\x -> length x == 1) matchingIndices
+                            moreFitMatchingIndex = head (filter (\x -> length x > 1) matchingIndices)
+                            fittingDominos = findDominosOnIndices board doms (concat oneFitMatchingIndices)
+                            fittingDominosMoreFit = findDominosOnIndices board doms moreFitMatchingIndex
+                            remainingDominos = deletePlacedDominosFromDominos doms fittingDominos
+                            remainingDominosMoreFit = deletePlacedDominoFromDominos doms (head fittingDominosMoreFit)
 
--- Finds the pip on the board at the specified index
-findPipOnIndex :: (Int, Int) -> Board -> Pos
-findPipOnIndex ind board = getNthInRow (snd ind) (getNthInBoard (fst ind) board)
+-- FINDING MATCHING INDICES FOR ALL AVAILABLE DOMINOS
+---------------------------------------------------------------------------------------------------
+
+-- Finds the number of matching indices for all available dominos
+findMatchingIndicesAllDominos :: [Dom] -> Board -> [[((Int, Int),(Int, Int))]]
+findMatchingIndicesAllDominos doms board = [findMatchingIndices dom board | dom <- doms]
+
+-- Finds matching indices for a domino without duplicates
+findMatchingIndices :: Dom -> Board -> [((Int, Int), (Int, Int))]
+findMatchingIndices dom board = removeDuplicates (findMatchingIndicesWithDuplicates dom board)
+
+-- Finds the indices where the domino can be placed on the board
+findMatchingIndicesWithDuplicates :: Dom -> Board -> [((Int, Int), (Int, Int))]
+findMatchingIndicesWithDuplicates dom board = [(ind, nind) | ind <- findFirstPipIndices ((fst (fst dom)), -1) board, nind <- findMatchingSecondPipIndices ((snd (fst dom)), -1) ind board]
+
+-- Removes duplicate indices
+removeDuplicates :: [((Int, Int), (Int, Int))] -> [((Int, Int), (Int, Int))]
+removeDuplicates [] = []
+removeDuplicates (((a,b),(c,d)):is) | elem ((c,d),(a,b)) is = removeDuplicates is
+                                    | otherwise             = ((a,b),(c,d)):removeDuplicates is
+
+-- Finds the indices of the first pip of the domino in the board
+findFirstPipIndices :: Pos -> Board -> [(Int, Int)]
+findFirstPipIndices pos board = nub [(indb, indr)| row <- board, n <- row, n == pos, indr <- findIndicesInRow n row, indb <- findRowInBoard row board]
+
+-- Finds the indices of the pips that have the second pip and are neighbours of the first pip
+findMatchingSecondPipIndices :: Pos -> (Int, Int) -> Board -> [(Int, Int)]
+findMatchingSecondPipIndices p ind board = [i | i <- findNeighbouringIndices ind, findPipOnIndex i board == p]
 
 -- Finds the neighbouring pip indices for a given pip index
 findNeighbouringIndices :: (Int, Int) -> [(Int, Int)]
@@ -146,31 +165,63 @@ findNeighbouringIndices ind | fst ind == 0 && snd ind == 0 = [(0, 1), (1, 0)]
                             | fst ind < 6  && snd ind == 7 = [((fst ind) - 1, 7), ((fst ind) + 1, 7), ((fst ind), 6)]
                             | otherwise                    = [((fst ind) - 1, (snd ind)), ((fst ind) + 1, (snd ind)), ((fst ind), (snd ind) - 1), ((fst ind), (snd ind + 1))]
 
--- Finds the indices of the first pip of the domino in the board
-findFirstPipIndices :: Pos -> Board -> [(Int, Int)]
-findFirstPipIndices pos board = nub [(indb, indr)| row <- board, n <- row, n == pos, indr <- findIndicesInRow n row, indb <- findRowInBoard row board]
+-- Finds the pip on the board at the specified index
+findPipOnIndex :: (Int, Int) -> Board -> Pos
+findPipOnIndex ind board = getNthInRow (snd ind) (getNthInBoard (fst ind) board)
 
--- Finds the indices of the pips that have the second pip and are neighbours of the first pip
-findMatchingSecondPipIndices :: Pos -> (Int, Int) -> Board -> [(Int, Int)]
-findMatchingSecondPipIndices p ind board = [i | i <- findNeighbouringIndices ind, findPipOnIndex i board == p]
+-- Gets the nth element from a row
+getNthInRow :: Int -> Row -> Pos
+getNthInRow 0 xs = head xs
+getNthInRow n xs = getNthInRow (n - 1) (tail xs)
 
--- Finds the indices where the domino can be placed on the board
-findMatchingIndicesWithDuplicates :: Dom -> Board -> [((Int, Int), (Int, Int))]
-findMatchingIndicesWithDuplicates dom board = [(ind, nind) | ind <- findFirstPipIndices ((fst (fst dom)), -1) board, nind <- findMatchingSecondPipIndices ((snd (fst dom)), -1) ind board]
+-- Gets the nth row from a board
+getNthInBoard :: Int -> Board -> Row
+getNthInBoard 0 xss = head xss
+getNthInBoard n xss = getNthInBoard (n - 1) (tail xss)
 
--- Finds matching indices for a domino without duplicates
-findMatchingIndices :: Dom -> Board -> [((Int, Int), (Int, Int))]
-findMatchingIndices dom board = removeMatchingIndex (findMatchingIndicesWithDuplicates dom board)
+-- Finds the indices of the row in the board
+findRowInBoard :: Row -> Board -> [Int]
+findRowInBoard xs xss = findIndices (== xs) xss
 
--- Removes duplicate indices
-removeMatchingIndex :: [((Int, Int), (Int, Int))] -> [((Int, Int), (Int, Int))]
-removeMatchingIndex [] = []
-removeMatchingIndex (((a,b),(c,d)):is) | elem ((c,d),(a,b)) is = removeMatchingIndex is
-                                       | otherwise             = ((a,b),(c,d)):removeMatchingIndex is
+-- Finds the indices of a pip in a row
+findIndicesInRow :: Pos -> Row -> [Int]
+findIndicesInRow x xs = findIndices (== x) xs
+
+-- FINDING DOMINOS ON INDICES
+---------------------------------------------------------------------------------------------------
+
+-- Finds the dominos that fit on the indices
+findDominosOnIndices :: Board -> [Dom] -> [((Int, Int), (Int, Int))] -> [Dom]
+findDominosOnIndices board doms is = [findDominoOnIndex board doms i | i <- is]
+
+-- Finds the pips on the index of the forced position
+findDominoOnIndex :: Board -> [Dom] -> ((Int, Int), (Int, Int)) -> Dom
+findDominoOnIndex board doms ind = findDomino doms (getPip (findPipOnIndex (fst ind) board), getPip(findPipOnIndex (snd ind) board))
+
+-- Finds a domino from the list of dominos based on the pips of the domino
+findDomino :: [Dom] -> (Int, Int) -> Dom
+findDomino doms (x,y) = head (filter (\dom -> fst dom == (x,y) || fst dom == (y,x)) doms) 
+
+-- PLACING DOMINO ON BOARD
+---------------------------------------------------------------------------------------------------
+
+-- Places the one fit dominos on the board
+placeDominos :: [((Int, Int), (Int, Int))] -> [Dom] -> Board -> Board
+placeDominos [][] board = board
+placeDominos (i:is) (d:ds) board = placeDominos is ds (updateBoard board d i)
+
+-- Places the more fit dominos on the board
+placeDominosMoreFit :: [((Int, Int), (Int, Int))] -> [Dom] -> Board -> [Board]
+placeDominosMoreFit (i:[]) (d:[]) board = [updateBoard board d i]
+placeDominosMoreFit (i:is) (d:ds) board = (updateBoard board d i):(placeDominosMoreFit is ds board)
 
 -- Updates the board by placing a domino on the list of indices
-updateBoard :: Board -> Dom -> [((Int, Int), (Int, Int))] -> [Board]
-updateBoard board dom inds = [setBoneOnPip (setBoneOnPip board dom (fst ind)) dom (snd ind) | ind <- inds]
+updateBoard :: Board -> Dom -> ((Int, Int), (Int, Int)) -> Board
+updateBoard board dom i = setBoneOnPip (setBoneOnPip board dom (fst i)) dom (snd i)
+
+-- Sets the bone of the position to the correct bone of the placed domino
+setBoneOnPip :: Board -> Dom -> (Int, Int) -> Board
+setBoneOnPip board dom ind = replaceNthInBoard (fst ind) (replaceNthInRow (snd ind) (getPip (findPipOnIndex ind board), snd dom) (getNthInBoard (fst ind) board)) board
 
 -- Replaces the position at the index with the specified position
 replaceNthInRow :: Int -> Pos -> Row -> Row
@@ -182,135 +233,57 @@ replaceNthInBoard :: Int -> Row -> Board -> Board
 replaceNthInBoard n row (x:xs) | n == 0    = row:xs
                                | otherwise = x:replaceNthInBoard (n - 1) row xs
 
--- Sets the bone of the position to the correct bone of the placed domino
-setBoneOnPip :: Board -> Dom -> (Int, Int) -> Board
-setBoneOnPip board dom ind = replaceNthInBoard (fst ind) (replaceNthInRow (snd ind) (getPip (findPipOnIndex ind board), snd dom) (getNthInBoard (fst ind) board)) board
+-- UPDATING LIST OF DOMINOS
+---------------------------------------------------------------------------------------------------
 
--- Returns the pip of a position
-getPip :: Pos -> Int
-getPip (pip, _) = pip
+-- Deletes the placed domino from the list of available dominos to place on the board
+deletePlacedDominoFromDominos :: [Dom] -> Dom -> [Dom]
+deletePlacedDominoFromDominos doms dom = [x | x <- doms, x /= dom]
 
--- Returns the bone of a position
-getBone :: Pos -> Int
-getBone (_, bone) = bone
+-- Deletes the placed dominos from the list of available dominos to place on the board
+deletePlacedDominosFromDominos :: [Dom] -> [Dom] -> [Dom]
+deletePlacedDominosFromDominos ds dds = [d | d <- ds, not (elem d dds)]
 
--- Tries to place a domino on the board and returns the resulting board
-tryDomino :: Dom -> Board -> [Board]
-tryDomino dom board = if length (findMatchingIndices dom board) == 1 then
-                             updateBoard board dom (findMatchingIndices dom board) 
-                      else if length (findMatchingIndices dom board) == 0 then
-                             []
-                      else
-                             [board]
-
--- Finds the number of matching indices for all available dominos
-findMatchingIndicesAllDominos :: [Dom] -> Board -> [[((Int, Int),(Int, Int))]]
-findMatchingIndicesAllDominos doms board = [findMatchingIndices dom board | dom <- doms]
-
+-- CHECKING IF BOARD IS FILLED
+---------------------------------------------------------------------------------------------------
 -- Whether or not the board is completely filled
 isFilled :: Board -> Bool
 isFilled board = numberOfUnfilledPositions board == 0
-
--- Whether or not the board is equal depending on the number of unfilled positions
-isEqual :: Board -> Board -> Bool
-isEqual board newBoard = numberOfUnfilledPositions board == numberOfUnfilledPositions newBoard
 
 -- Calculates the number of unfilled positions
 numberOfUnfilledPositions :: Board -> Int
 numberOfUnfilledPositions board = length (filter (\pos -> (getBone pos) == (-1)) (concat board))
 
--- Finds the pairs of indices of forced positions
-findForcedPositionsIndices :: Board -> [((Int, Int), (Int, Int))]
-findForcedPositionsIndices board = [(ind, nind) | ind <- indices, nind <- findOpenNeighbouringIndices board ind, length (findOpenNeighbouringIndices board ind) == 1]
+-- SHOWING BOARDS ON THE CONSOLE
+---------------------------------------------------------------------------------------------------
 
--- Finds the pips on the index of the forced position
-findPipsOnForcedPositionsIndex :: Board -> ((Int, Int), (Int, Int)) -> (Pos, Pos)
-findPipsOnForcedPositionsIndex board ind = (findPipOnIndex (fst ind) board, findPipOnIndex (snd ind) board)
+-- Shows the input board on the console
+showInputBoard :: Board -> IO ()
+showInputBoard board = do putStrLn "Input: "
+                          sequence_ (map (\r -> showInputRow r) board)
+                          putStrLn ""
 
--- Finds the domino that can be placed on the index of the forced position
-findDominoOnForcedPositionIndex :: [Dom] -> (Pos, Pos) -> Dom
-findDominoOnForcedPositionIndex doms poss = findDomino doms (getPip (fst poss), getPip (snd poss))
+-- Shows a row of the input board on the console
+showInputRow :: Row -> IO ()
+showInputRow row = do sequence_ (map (\p -> showInputPip p) row)
+                      putStrLn ""
 
--- Updates the board for one forced position
-updateBoardForcedPosition :: Board -> [Dom] -> ((Int, Int), (Int, Int)) -> Board
-updateBoardForcedPosition board doms i = updateBoard' board (findDominoOnForcedPositionIndex doms (findPipsOnForcedPositionsIndex board i)) i
+-- Shows a pip of the input board on the console
+showInputPip :: Pos -> IO () 
+showInputPip pos = putStr ("   " ++ (show (getPip pos)))
 
--- Updates the board for all forced positions
-updateBoardForcedPositions :: Board -> [Dom] -> [((Int, Int),(Int, Int))] -> [Board]
-updateBoardForcedPositions board _ [] = []
-updateBoardForcedPositions board doms inds = updateBoardForcedPositions (updateBoardForcedPosition board doms (head inds)) doms (tail inds)
+-- Shows the output board on the console
+showOutputBoard :: Board -> IO ()
+showOutputBoard board = do putStrLn "Output: "
+                           sequence_ (map (\r -> showOutputRow r) board)
+                           putStrLn ""
 
--- Finds the indices of open neighbours of an index
-findOpenNeighbouringIndices :: Board -> (Int, Int) -> [(Int, Int)]
-findOpenNeighbouringIndices board ind = findOpenIndices board (findNeighbouringIndices ind) 
+-- Shows a row of the output board on the console
+showOutputRow :: Row -> IO ()
+showOutputRow row = do sequence_ (map (\p -> showOutputBone p) row)
+                       putStrLn ""
 
--- Finds the open indices from a list of indices
-findOpenIndices :: Board -> [(Int, Int)] -> [(Int,Int)]
-findOpenIndices board inds = filter (\ind -> getBone (findPipOnIndex ind board) == (-1)) inds
-
--- Finds a domino from the list of dominos based on the pips of the domino
-findDomino :: [Dom] -> (Int, Int) -> Dom
-findDomino doms (x,y) = head (filter (\dom -> fst dom == (x,y) || fst dom == (y,x)) doms) 
-
--- Solves the input board
-solveBoard :: [Dom] -> Board -> [Board]
-solveBoard [] board | isFilled board = [board]
-                    | otherwise      = []
-solveBoard doms board | not (null (filter (\x -> length x == 0) matchingIndices)) = []
-                      | not (null (oneFitMatchingIndices))                        = solveBoard remainingDominos (placeDominos (concat oneFitMatchingIndices) fittingDominos board)
-                      | otherwise                                                 = concat (map (\b -> solveBoard remainingDominosMoreFit b) (placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board))
-                      where matchingIndices = findMatchingIndicesAllDominos doms board
-                            oneFitMatchingIndices = filter (\x -> length x == 1) matchingIndices
-                            moreFitMatchingIndex = head (filter (\x -> length x > 1) matchingIndices)
-                            fittingDominos = findDominosOneFit board doms (concat oneFitMatchingIndices)
-                            fittingDominosMoreFit = findDominosOneFit board doms moreFitMatchingIndex
-                            remainingDominos = deletePlacedDominosFromDominos doms fittingDominos
-                            remainingDominosMoreFit = deletePlacedDominoFromDominos doms (head fittingDominosMoreFit)
-
--- Place the one fit dominos on the board
-placeDominos :: [((Int, Int), (Int, Int))] -> [Dom] -> Board -> Board
-placeDominos [][] board = board
-placeDominos (i:is) (d:ds) board = placeDominos is ds (updateBoard' board d i)
-
--- FOR TESTING EACH ROUND OF RECURSION
-placeDominos' :: [Dom] -> Board -> (Board, [Dom])
-placeDominos' doms board = (placeDominos (concat oneFitMatchingIndices) fittingDominos board, remainingDominos)
-                           where matchingIndices = findMatchingIndicesAllDominos doms board
-                                 oneFitMatchingIndices = filter (\x -> length x == 1) matchingIndices
-                                 fittingDominos = findDominosOneFit board doms (concat oneFitMatchingIndices)
-                                 remainingDominos = deletePlacedDominosFromDominos doms fittingDominos
-
--- FOR TESTING EACH ROUND OF RECURSION
-placeDominosMoreFit' :: [Dom] -> Board -> [Board]
-placeDominosMoreFit' doms board = placeDominosMoreFit moreFitMatchingIndex fittingDominosMoreFit board 
-                                  where matchingIndices = findMatchingIndicesAllDominos doms board
-                                        moreFitMatchingIndex = head (filter (\x -> length x > 1) matchingIndices)
-                                        fittingDominosMoreFit = findDominosOneFit board doms moreFitMatchingIndex
-                                        remainingDominosMoreFit = deletePlacedDominoFromDominos doms (head fittingDominosMoreFit)
-
-placeDominosForcedPositions' :: [Dom] -> Board -> (Board, [Dom])
-placeDominosForcedPositions' doms board = (placeDominos forcedPositions fittingDominos board, remainingDominos)
-                                          where forcedPositions = findForcedPositionsIndices board
-                                                fittingDominos = findDominosOneFit board doms forcedPositions
-                                                remainingDominos = deletePlacedDominosFromDominos doms fittingDominos
-
--- Updates the board by placing a domino on the list of indices
-updateBoard' :: Board -> Dom -> ((Int, Int), (Int, Int)) -> Board
-updateBoard' board dom i = setBoneOnPip (setBoneOnPip board dom (fst i)) dom (snd i)
-
--- Finds the dominos that fit on the one fit indices
-findDominosOneFit :: Board -> [Dom] -> [((Int, Int), (Int, Int))] -> [Dom]
-findDominosOneFit board doms is = [findDominoOnOneFitIndex board doms i | i <- is]
-
--- Finds the pips on the index of the forced position
-findDominoOnOneFitIndex :: Board -> [Dom] -> ((Int, Int), (Int, Int)) -> Dom
-findDominoOnOneFitIndex board doms ind = findDomino doms (getPip (findPipOnIndex (fst ind) board), getPip(findPipOnIndex (snd ind) board))
-
--- Deletes the placed domino from the list of available dominos to place on the board
-deletePlacedDominosFromDominos :: [Dom] -> [Dom] -> [Dom]
-deletePlacedDominosFromDominos ds dds = [d | d <- ds, not (elem d dds)]
-
--- Place the one fit dominos on the board
-placeDominosMoreFit :: [((Int, Int), (Int, Int))] -> [Dom] -> Board -> [Board]
-placeDominosMoreFit (i:[]) (d:[]) board = [updateBoard' board d i]
-placeDominosMoreFit (i:is) (d:ds) board = (updateBoard' board d i):(placeDominosMoreFit is ds board)
+-- Shows a bone of the output board on the console
+showOutputBone :: Pos -> IO ()
+showOutputBone pos | getBone pos < 10 = putStr ("   " ++ (show (getBone pos)))
+                   | otherwise        = putStr ("  " ++ (show (getBone pos)))
