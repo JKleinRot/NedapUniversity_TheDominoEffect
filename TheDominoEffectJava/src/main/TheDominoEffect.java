@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Scanner;
 
 import main.board.Board;
-import main.board.Position;
 import main.exception.InvalidInputException;
 import main.exception.InvalidInputGridException;
 import main.exception.InvalidInputSizeException;
@@ -12,17 +11,18 @@ import main.solver.Solver;
 import main.solver.SolverImpl;
 
 /**
- * The main class to run to find all possible solutions for a domino grid.
+ * The main class to run to find all possible solutions for a domino board.
  */
 public class TheDominoEffect {
 
-	/** The scanner to read input */
+	/** The scanner to read input from the console */
 	private final Scanner in;
 
+	/** The solver that finds solutions for the domino board */
 	private final Solver solver;
 
 	/**
-	 * Constructor
+	 * Constructor.
 	 */
 	public TheDominoEffect() {
 		in = new Scanner(System.in);
@@ -31,7 +31,7 @@ public class TheDominoEffect {
 
 	/**
 	 * Asks for an input domino board, finds the solutions and displays the input
-	 * domino board and the solutions.
+	 * domino board and the solutions on the console.
 	 */
 	public void run() {
 		final String input = readInput(
@@ -53,6 +53,22 @@ public class TheDominoEffect {
 	}
 
 	/**
+	 * Reads the input after displaying the prompt.
+	 * 
+	 * @param prompt
+	 *            The prompt on the console
+	 * @return The input
+	 */
+	private String readInput(final String prompt) {
+		String input = null;
+		System.out.println(prompt);
+		if (in.hasNextLine()) {
+			input = in.nextLine();
+		}
+		return input;
+	}
+	
+	/**
 	 * Shows the solutions on the console.
 	 * 
 	 * @param solutions
@@ -69,21 +85,11 @@ public class TheDominoEffect {
 	}
 
 	/**
-	 * Reads the input after displaying the prompt.
+	 * The main functions that is ran when starting TheDominoEffect.
 	 * 
-	 * @param prompt
-	 *            The prompt on the console
-	 * @return The input
+	 * @param args
+	 *            Not used
 	 */
-	private String readInput(final String prompt) {
-		String input = null;
-		System.out.println(prompt);
-		if (in.hasNextLine()) {
-			input = in.nextLine();
-		}
-		return input;
-	}
-
 	public static void main(String args[]) {
 		final TheDominoEffect theDominoEffect = new TheDominoEffect();
 		theDominoEffect.run();

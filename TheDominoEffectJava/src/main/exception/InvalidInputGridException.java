@@ -1,5 +1,9 @@
 package main.exception;
 
+/**
+ * Exception thrown if the input is invalid due to the input not having equal
+ * amounts of each pip.
+ */
 public class InvalidInputGridException extends Exception {
 
 	/** The serial version UID */

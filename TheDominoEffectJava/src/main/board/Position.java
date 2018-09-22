@@ -6,10 +6,10 @@ package main.board;
 public class Position {
 
 	/** The bone */
-	private int bone;
+	private final int bone;
 
 	/** Whether or not the position is occupied */
-	private Boolean isOccupied;
+	private final Boolean isOccupied;
 
 	/** The pip */
 	private final int pip;
@@ -43,28 +43,28 @@ public class Position {
 	/**
 	 * Returns the bone of the position if it is occupied or -1 otherwise.
 	 * 
-	 * @return The bone of the position
+	 * @return The bone
 	 */
 	public int getBone() {
 		return bone;
 	}
 
 	/**
-	 * Returns whether or not the position is occupied.
-	 * 
-	 * @return
-	 */
-	public Boolean isOccupied() {
-		return isOccupied;
-	}
-
-	/**
 	 * Returns the pip of the position.
 	 * 
-	 * @return The pip of the position
+	 * @return The pip
 	 */
 	public int getPip() {
 		return pip;
+	}
+	
+	/**
+	 * Returns whether or not the position is occupied.
+	 * 
+	 * @return Whether or not the position is occupied
+	 */
+	public Boolean isOccupied() {
+		return isOccupied;
 	}
 
 	/**
@@ -78,9 +78,10 @@ public class Position {
 	public Position withBone(final int bone) {
 		return new Position(bone, pip);
 	}
-	
+
 	@Override
 	public boolean equals(Object position) {
-		return pip == ((Position) position).getPip() && bone == ((Position) position).getBone() && isOccupied == ((Position) position).isOccupied(); 
+		return pip == ((Position) position).getPip() && bone == ((Position) position).getBone()
+				&& isOccupied == ((Position) position).isOccupied();
 	}
 }

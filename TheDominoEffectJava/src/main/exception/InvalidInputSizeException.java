@@ -1,5 +1,12 @@
 package main.exception;
 
+/**
+ * Exception thrown in the input is invalid due to the input not having the
+ * correct amount of characters.
+ * 
+ * @author janine.kleinrot
+ *
+ */
 public class InvalidInputSizeException extends Exception {
 
 	/** 

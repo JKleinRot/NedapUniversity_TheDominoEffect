@@ -57,7 +57,7 @@ public class Board {
 	}
 
 	/**
-	 * Constructor for copying.
+	 * Constructor for cloning.
 	 * 
 	 * @param positions
 	 *            The current positions
@@ -80,11 +80,35 @@ public class Board {
 		}
 		return new Board(copiedPositions);
 	}
+	
+	/**
+	 * Finds the matching indices on the board for each of the dominos.
+	 * 
+	 * @param dominos
+	 *            The dominos
+	 * @return The matching indices
+	 */
+	public Map<Domino, List<PairOfIndices>> findMatchingIndices(final Dominos dominos) {
+		final Map<Domino, List<Index>> matchingIndicesFirstPip = findMatchingIndicesFirstPip(dominos);
+		return removeDuplicates(findMatchingPairsOfIndices(dominos, matchingIndicesFirstPip));
+	}
 
+	/**
+	 * Returns the position at the index
+	 * 
+	 * @param index
+	 *            The index
+	 * @return The position
+	 */
 	public Position getPosition(final Index index) {
 		return positions[index.getRow()][index.getColumn()];
 	}
-	
+
+	/**
+	 * Whether or not the board is filled.
+	 * 
+	 * @return Whether or not the board is filled
+	 */
 	public boolean isFilled() {
 		for (int x = 0; x < 7; x++) {
 			for (int y = 0; y < 8; y++) {
@@ -96,25 +120,34 @@ public class Board {
 		return true;
 	}
 	
-	public void showPips() {
-		StringBuilder builder = new StringBuilder();
-		for (int x = 0; x < 7; x++) {
-			for (int y = 0; y < 8; y++) {
-				builder.append("   " + positions[x][y].getPip());
-				if (y == 7) {
-					builder.append("\n");
-				}
-			}
-		}
-		System.out.println(builder.toString());
+	/**
+	 * Places the domino on the board.
+	 * 
+	 * @param domino
+	 *            The domino
+	 * @param indices
+	 *            The indices
+	 * @return The resulting board
+	 */
+	public Board placeDomino(final Domino domino, final PairOfIndices indices) {
+		final Position first = positions[indices.getFirstIndex().getRow()][indices.getFirstIndex().getColumn()];
+		final Position second = positions[indices.getSecondIndex().getRow()][indices.getSecondIndex().getColumn()];
+		positions[indices.getFirstIndex().getRow()][indices.getFirstIndex().getColumn()] = first
+				.withBone(domino.getBone());
+		positions[indices.getSecondIndex().getRow()][indices.getSecondIndex().getColumn()] = second
+				.withBone(domino.getBone());
+		return this;
 	}
 	
+	/**
+	 * Shows the bones of the board on the console.
+	 */
 	public void showBones() {
-		StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder();
 		for (int x = 0; x < 7; x++) {
 			for (int y = 0; y < 8; y++) {
 				if (positions[x][y].getBone() < 10) {
-					builder.append("   " + positions[x][y].getBone()); 
+					builder.append("   " + positions[x][y].getBone());
 				} else {
 					builder.append("  " + positions[x][y].getBone());
 				}
@@ -127,34 +160,19 @@ public class Board {
 	}
 
 	/**
-	 * Finds the matching indices on the board for each of the dominos.
-	 * 
-	 * @param dominos
-	 *            The dominos
-	 * @return The matching indices
+	 * Shows the pips of the board on the console.
 	 */
-	public Map<Domino, List<PairOfIndices>> findMatchingIndices(final Dominos dominos) {
-		Map<Domino, List<Index>> matchingIndicesFirstPip = findMatchingIndicesFirstPip(dominos);
-		return removeDuplicates(findMatchingPairsOfIndices(dominos, matchingIndicesFirstPip));
-	}
-
-	/**
-	 * Places the domino on the board.
-	 * 
-	 * @param domino
-	 *            The domino
-	 * @param indices
-	 *            The indices
-	 * @return The resulting board
-	 */
-	public Board placeDomino(final Domino domino, final PairOfIndices indices) {
-		Position first = positions[indices.getFirstIndex().getRow()][indices.getFirstIndex().getColumn()];
-		Position second = positions[indices.getSecondIndex().getRow()][indices.getSecondIndex().getColumn()];
-		positions[indices.getFirstIndex().getRow()][indices.getFirstIndex().getColumn()] = first
-				.withBone(domino.getBone());
-		positions[indices.getSecondIndex().getRow()][indices.getSecondIndex().getColumn()] = second
-				.withBone(domino.getBone());
-		return this;
+	public void showPips() {
+		final StringBuilder builder = new StringBuilder();
+		for (int x = 0; x < 7; x++) {
+			for (int y = 0; y < 8; y++) {
+				builder.append("   " + positions[x][y].getPip());
+				if (y == 7) {
+					builder.append("\n");
+				}
+			}
+		}
+		System.out.println(builder.toString());
 	}
 
 	/**
@@ -166,10 +184,10 @@ public class Board {
 	 * @return The matching indices of the first pip
 	 */
 	private Map<Domino, List<Index>> findMatchingIndicesFirstPip(final Dominos dominos) {
-		Map<Domino, List<Index>> firstPipIndices = new HashMap<>();
-		for (Domino domino : dominos.getDominos()) {
+		final Map<Domino, List<Index>> firstPipIndices = new HashMap<>();
+		for (final Domino domino : dominos.getDominos()) {
 			int firstPip = domino.getPips().getFirstPip();
-			List<Index> matchingIndices = new ArrayList<>();
+			final List<Index> matchingIndices = new ArrayList<>();
 			for (int x = 0; x < 7; x++) {
 				for (int y = 0; y < 8; y++) {
 					if (!positions[x][y].isOccupied() && positions[x][y].getPip() == firstPip) {
@@ -183,24 +201,25 @@ public class Board {
 	}
 
 	/**
-	 * Finds the matching pairs of indices for the list of dominos
+	 * Finds the matching pairs of indices for the list of dominos and the matching
+	 * indices for the first pip.
 	 * 
 	 * @param dominos
 	 *            The dominos
 	 * @param matchingIndicesFirstPip
-	 *            the indices for the first pips
+	 *            The matching indices for the first pips
 	 * @return The matching pairs of indices
 	 */
 	private Map<Domino, List<PairOfIndices>> findMatchingPairsOfIndices(final Dominos dominos,
 			final Map<Domino, List<Index>> matchingIndicesFirstPip) {
-		Map<Domino, List<PairOfIndices>> matchingNeighboursOfIndices = new HashMap<>();
-		for (Map.Entry<Domino, List<Index>> matchingIndexFirstPip : matchingIndicesFirstPip.entrySet()) {
+		final Map<Domino, List<PairOfIndices>> matchingNeighboursOfIndices = new HashMap<>();
+		for (final Map.Entry<Domino, List<Index>> matchingIndexFirstPip : matchingIndicesFirstPip.entrySet()) {
 			int secondPip = matchingIndexFirstPip.getKey().getPips().getSecondPip();
-			List<PairOfIndices> matchingNeighboursOfIndex = new ArrayList<>();
-			for (Index index : matchingIndexFirstPip.getValue()) {
-				List<Index> neighboursOfIndex = findNeighboursOfIndex(index);
-				for (Index neighbourOfIndex : neighboursOfIndex) {
-					Position position = positions[neighbourOfIndex.getRow()][neighbourOfIndex.getColumn()];
+			final List<PairOfIndices> matchingNeighboursOfIndex = new ArrayList<>();
+			for (final Index index : matchingIndexFirstPip.getValue()) {
+				final List<Index> neighboursOfIndex = findNeighboursOfIndex(index);
+				for (final Index neighbourOfIndex : neighboursOfIndex) {
+					final Position position = positions[neighbourOfIndex.getRow()][neighbourOfIndex.getColumn()];
 					if (position.getPip() == secondPip && !position.isOccupied()) {
 						matchingNeighboursOfIndex.add(new PairOfIndices(index, neighbourOfIndex));
 					}
@@ -210,34 +229,9 @@ public class Board {
 		}
 		return matchingNeighboursOfIndices;
 	}
-
+	
 	/**
-	 * Removes duplicate pairs of indices for each domino.
-	 * 
-	 * @param pairs
-	 *            The pairs of indices
-	 * @return The pairs of indices without duplicates
-	 */
-	private Map<Domino, List<PairOfIndices>> removeDuplicates(final Map<Domino, List<PairOfIndices>> matchingIndices) {
-		Map<Domino, List<PairOfIndices>> pairsWithoutDuplicates = new HashMap<>();
-		for (Map.Entry<Domino, List<PairOfIndices>> matchingIndex : matchingIndices.entrySet()) {
-			List<PairOfIndices> pairsWithDuplicates = new ArrayList<>(matchingIndex.getValue());
-			List<PairOfIndices> toRemove = new ArrayList<>();
-			for (PairOfIndices pair : pairsWithDuplicates) {
-				if (pairsWithDuplicates.contains(pair.switchIndices()) && !toRemove.contains(pair.switchIndices())) {
-					toRemove.add(pair);
-				}
-			}
-			for (PairOfIndices remove : toRemove) {
-				pairsWithDuplicates.remove(remove);
-			}
-			pairsWithoutDuplicates.put(matchingIndex.getKey(), pairsWithDuplicates);
-		}
-		return pairsWithoutDuplicates;
-	}
-
-	/**
-	 * Finds the list of neighbouring indices for the index
+	 * Finds the list of neighbouring indices for the index.
 	 * 
 	 * @param index
 	 *            The index
@@ -272,27 +266,61 @@ public class Board {
 	}
 
 	/**
+	 * Removes duplicate pairs of indices for each domino.
+	 * 
+	 * @param pairs
+	 *            The pairs of indices
+	 * @return The pairs of indices without duplicates
+	 */
+	private Map<Domino, List<PairOfIndices>> removeDuplicates(final Map<Domino, List<PairOfIndices>> matchingIndices) {
+		final Map<Domino, List<PairOfIndices>> pairsWithoutDuplicates = new HashMap<>();
+		for (final Map.Entry<Domino, List<PairOfIndices>> matchingIndex : matchingIndices.entrySet()) {
+			final List<PairOfIndices> pairsWithDuplicates = new ArrayList<>(matchingIndex.getValue());
+			final List<PairOfIndices> toRemove = new ArrayList<>();
+			for (final PairOfIndices pair : pairsWithDuplicates) {
+				if (pairsWithDuplicates.contains(pair.switchIndices()) && !toRemove.contains(pair.switchIndices())) {
+					toRemove.add(pair);
+				}
+			}
+			for (final PairOfIndices remove : toRemove) {
+				pairsWithDuplicates.remove(remove);
+			}
+			pairsWithoutDuplicates.put(matchingIndex.getKey(), pairsWithDuplicates);
+		}
+		return pairsWithoutDuplicates;
+	}
+
+	/**
 	 * An index on the board.
 	 */
 	public static class Index {
 
-		/** The row */
-		private int row;
-
 		/** The column */
-		private int col;
+		private final int col;
+		
+		/** The row */
+		private final int row;
 
 		/**
-		 * Constructor
+		 * Constructor.
 		 * 
 		 * @param row
 		 *            The row
 		 * @param col
 		 *            The column
 		 */
-		public Index(int row, int col) {
+		public Index(final int row, final int col) {
 			this.row = row;
 			this.col = col;
+		}
+		
+		/**
+		 * Returns the column of the index.
+		 * 
+		 * @return The column
+		 */
+		public int getColumn() {
+			return col;
 		}
 
 		/**
@@ -302,15 +330,6 @@ public class Board {
 		 */
 		public int getRow() {
 			return row;
-		}
-
-		/**
-		 * Returns the column of the index.
-		 * 
-		 * @return The column
-		 */
-		public int getColumn() {
-			return col;
 		}
 
 		@Override
@@ -325,13 +344,13 @@ public class Board {
 	public static class PairOfIndices {
 
 		/** The first index */
-		private Index first;
+		private final Index first;
 
 		/** The second index */
-		private Index second;
+		private final Index second;
 
 		/**
-		 * Constructor
+		 * Constructor.
 		 * 
 		 * @param first
 		 *            The first index

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public class Dominos {
 
 	/** The dominos */
-	private List<Domino> dominos;
+	private final List<Domino> dominos;
 
 	/**
 	 * Constructor.
@@ -46,28 +46,26 @@ public class Dominos {
 		dominos.add(new Domino(new Pips(5, 6), 27));
 		dominos.add(new Domino(new Pips(6, 6), 28));
 	}
-	
+
+	/**
+	 * Constructor for cloning.
+	 * 
+	 * @param dominos
+	 *            The current dominos
+	 */
 	private Dominos(final List<Domino> dominos) {
 		this.dominos = dominos;
 	}
 
 	/**
-	 * Returns the dominos.
+	 * Returns a cloned list of dominos.
 	 * 
-	 * @return The dominos
+	 * @return The cloned list of dominos.
 	 */
-	public List<Domino> getDominos() {
-		return dominos;
-	}
-	
 	public Dominos clone() {
 		return new Dominos(new ArrayList<>(dominos));
 	}
 	
-	public boolean isEmpty() {
-		return dominos.size() == 0;
-	}
-
 	/**
 	 * Returns the domino corresponding to the pips.
 	 * 
@@ -84,21 +82,46 @@ public class Dominos {
 				.collect(Collectors.toList()).get(0);
 	}
 	
+	/**
+	 * Returns the dominos.
+	 * 
+	 * @return The dominos
+	 */
+	public List<Domino> getDominos() {
+		return dominos;
+	}
+
+	/**
+	 * Whether or not the list of dominos is empty.
+	 * 
+	 * @return Whether or not the list of dominos is empty
+	 */
+	public boolean isEmpty() {
+		return dominos.size() == 0;
+	}
+
+	/**
+	 * Removes the domino from the list of dominos.
+	 * 
+	 * @param domino
+	 *            The domino to remove
+	 * @return The resulting list of dominos
+	 */
 	public Dominos removeDomino(final Domino domino) {
 		dominos.remove(domino);
 		return this;
 	}
 
 	/**
-	 * A domino stone.
+	 * A domino.
 	 */
 	public static class Domino {
 
-		/** The pips */
-		private final Pips pips;
-
 		/** The bone */
 		private final int bone;
+		
+		/** The pips */
+		private final Pips pips;
 
 		/**
 		 * Constructor.
@@ -114,21 +137,21 @@ public class Dominos {
 		}
 
 		/**
-		 * Returns the pips.
-		 * 
-		 * @return The pips
-		 */
-		public Pips getPips() {
-			return pips;
-		}
-
-		/**
 		 * Returns the bone.
 		 * 
 		 * @return The bone
 		 */
 		public int getBone() {
 			return bone;
+		}
+		
+		/**
+		 * Returns the pips.
+		 * 
+		 * @return The pips
+		 */
+		public Pips getPips() {
+			return pips;
 		}
 
 		@Override
@@ -146,10 +169,10 @@ public class Dominos {
 	public static class Pips {
 
 		/** The first pip */
-		private int first;
+		private final int first;
 
 		/** The second pip */
-		private int second;
+		private final int second;
 
 		/**
 		 * Constructor.

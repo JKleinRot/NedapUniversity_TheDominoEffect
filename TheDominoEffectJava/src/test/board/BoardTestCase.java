@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +53,6 @@ public class BoardTestCase {
 		expectedMatchingIndices.put(domino, Arrays.asList(new PairOfIndices(new Index(6,6), new Index(5,6))));
 		
 		Map<Domino, List<PairOfIndices>> matchingIndices = board.findMatchingIndices(dominos);
-		List<PairOfIndices> list = matchingIndices.get(domino);
 		
 		for (PairOfIndices pair : expectedMatchingIndices.get(domino)) {
 			assertTrue(matchingIndices.get(domino).contains(pair));
